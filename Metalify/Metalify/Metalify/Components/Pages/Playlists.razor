@@ -1,0 +1,476 @@
+@page "/playlists"
+@rendermode InteractiveServer
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject IPlaylistService PlaylistService
+@inject IMusicDataService MusicDataService
+@inject IAudioPlayerService AudioPlayerService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>My Playlists - Metalify</PageTitle>
+
+<div class="playlists-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-list-music text-danger"></i> My Playlists
+            </h1>
+            <p class="text-muted">Create and manage your heavy metal collections</p>
+        </div>
+        <button class="btn btn-danger" @onclick="ShowCreatePlaylistModal">
+            <i class="fas fa-plus"></i> Create Playlist
+        </button>
+    </div>
+
+    @if (userPlaylists != null && userPlaylists.Any())
+    {
+        <div class="playlists-grid">
+            <div class="row">
+                @foreach (var playlist in userPlaylists)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="playlist-card">
+                            <div class="playlist-cover-container" @onclick="() => PlayPlaylist(playlist)">
+                                <img src="@playlist.CoverImageUrl" alt="@playlist.Name" class="playlist-cover" />
+                                <div class="play-overlay">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div class="song-count">@playlist.Songs.Count songs</div>
+                            </div>
+                            <div class="playlist-info">
+                                <h5 class="playlist-name">@playlist.Name</h5>
+                                <p class="playlist-description">@playlist.Description</p>
+                                <small class="text-muted">
+                                    Created @playlist.CreatedAt.ToString("MMM dd, yyyy")
+                                </small>
+                                <div class="playlist-actions mt-2">
+                                    <button class="btn btn-sm btn-outline-light me-2" 
+                                            @onclick="() => EditPlaylist(playlist)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            @onclick="() => DeletePlaylist(playlist)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-music fa-4x text-muted mb-4"></i>
+            <h3>No playlists yet</h3>
+            <p class="text-muted mb-4">Create your first playlist to organize your favorite metal tracks</p>
+            <button class="btn btn-danger btn-lg" @onclick="ShowCreatePlaylistModal">
+                <i class="fas fa-plus"></i> Create Your First Playlist
+            </button>
+        </div>
+    }
+
+    <!-- Suggested Songs for Playlists -->
+    @if (suggestedSongs != null && suggestedSongs.Any())
+    {
+        <section class="suggested-songs mt-5">
+            <h3 class="section-title mb-4">
+                <i class="fas fa-lightbulb"></i> Suggested for Your Playlists
+            </h3>
+            <div class="song-list">
+                @foreach (var song in suggestedSongs.Take(8))
+                {
+                    <div class="song-item d-flex align-items-center p-3" @onclick="() => PlaySong(song)">
+                        <div class="song-number me-3">
+                            <button class="btn btn-sm btn-outline-light play-btn">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                        <div class="song-details flex-grow-1">
+                            <div class="song-title">@song.Title</div>
+                            <div class="song-artist text-muted">@song.ArtistName • @song.AlbumTitle</div>
+                        </div>
+                        <div class="song-duration text-muted me-3">
+                            @FormatDuration(song.Duration)
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-sm btn-outline-light" @onclick:stopPropagation="true" 
+                                    @onclick="() => ShowAddToPlaylistModal(song)">
+                                <i class="fas fa-plus"></i> Add to Playlist
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+<!-- Create/Edit Playlist Modal -->
+@if (showPlaylistModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(editingPlaylist != null ? "Edit Playlist" : "Create New Playlist")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="HidePlaylistModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Playlist Name</label>
+                        <input type="text" class="form-control" @bind="playlistName" 
+                               placeholder="Enter playlist name..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" rows="3" @bind="playlistDescription" 
+                                  placeholder="Describe your playlist..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HidePlaylistModal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="SavePlaylist" 
+                            disabled="@(string.IsNullOrWhiteSpace(playlistName))">
+                        @(editingPlaylist != null ? "Update" : "Create") Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Add to Playlist Modal -->
+@if (showAddToPlaylistModal && selectedSong != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add "@selectedSong.Title" to Playlist</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="HideAddToPlaylistModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (userPlaylists != null && userPlaylists.Any())
+                    {
+                        <div class="playlist-selection">
+                            @foreach (var playlist in userPlaylists)
+                            {
+                                <div class="playlist-option d-flex align-items-center p-3 mb-2 rounded" 
+                                     style="background: #2a2a2a; cursor: pointer;" 
+                                     @onclick="() => AddSongToPlaylist(playlist, selectedSong)">
+                                    <img src="@playlist.CoverImageUrl" alt="@playlist.Name" 
+                                         class="playlist-thumb me-3" style="width: 50px; height: 50px; border-radius: 8px;" />
+                                    <div>
+                                        <div class="fw-bold">@playlist.Name</div>
+                                        <small class="text-muted">@playlist.Songs.Count songs</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">You don't have any playlists yet. Create one first!</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideAddToPlaylistModal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="() => { HideAddToPlaylistModal(); ShowCreatePlaylistModal(); }">
+                        Create New Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<Playlist>? userPlaylists;
+    private IEnumerable<Song>? suggestedSongs;
+    private bool showPlaylistModal = false;
+    private bool showAddToPlaylistModal = false;
+    private Playlist? editingPlaylist = null;
+    private Song? selectedSong = null;
+    private string playlistName = string.Empty;
+    private string playlistDescription = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var playlistsTask = PlaylistService.GetUserPlaylistsAsync();
+            var songsTask = MusicDataService.GetSongsAsync();
+
+            await Task.WhenAll(playlistsTask, songsTask);
+
+            userPlaylists = await playlistsTask;
+            suggestedSongs = await songsTask;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private async Task PlayPlaylist(Playlist playlist)
+    {
+        if (playlist.Songs.Any())
+        {
+            await AudioPlayerService.PlayAsync(playlist.Songs);
+        }
+    }
+
+    private async Task PlaySong(Song song)
+    {
+        await AudioPlayerService.PlayAsync(song);
+    }
+
+    private void ShowCreatePlaylistModal()
+    {
+        editingPlaylist = null;
+        playlistName = string.Empty;
+        playlistDescription = string.Empty;
+        showPlaylistModal = true;
+    }
+
+    private void EditPlaylist(Playlist playlist)
+    {
+        editingPlaylist = playlist;
+        playlistName = playlist.Name;
+        playlistDescription = playlist.Description;
+        showPlaylistModal = true;
+    }
+
+    private void HidePlaylistModal()
+    {
+        showPlaylistModal = false;
+        editingPlaylist = null;
+        playlistName = string.Empty;
+        playlistDescription = string.Empty;
+    }
+
+    private async Task SavePlaylist()
+    {
+        try
+        {
+            if (editingPlaylist != null)
+            {
+                editingPlaylist.Name = playlistName;
+                editingPlaylist.Description = playlistDescription;
+                await PlaylistService.UpdatePlaylistAsync(editingPlaylist);
+            }
+            else
+            {
+                await PlaylistService.CreatePlaylistAsync(playlistName, playlistDescription);
+            }
+
+            await LoadData();
+            HidePlaylistModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving playlist: {ex.Message}");
+        }
+    }    private async Task DeletePlaylist(Playlist playlist)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{playlist.Name}'?"))
+        {
+            await PlaylistService.DeletePlaylistAsync(playlist.Id);
+            await LoadData();
+        }
+    }
+
+    private void ShowAddToPlaylistModal(Song song)
+    {
+        selectedSong = song;
+        showAddToPlaylistModal = true;
+    }
+
+    private void HideAddToPlaylistModal()
+    {
+        showAddToPlaylistModal = false;
+        selectedSong = null;
+    }
+
+    private async Task AddSongToPlaylist(Playlist playlist, Song song)
+    {
+        try
+        {
+            await PlaylistService.AddSongToPlaylistAsync(playlist.Id, song.Id);
+            await LoadData();
+            HideAddToPlaylistModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding song to playlist: {ex.Message}");
+        }
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalMinutes}:{duration.Seconds:D2}";
+    }
+}
+
+<style>
+    .section-title {
+        color: #dc3545;
+        font-weight: bold;
+        border-bottom: 2px solid #dc3545;
+        padding-bottom: 8px;
+        display: inline-block;
+    }
+
+    .playlist-card {
+        background: #1a1a1a;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid #333;
+        height: 100%;
+    }
+
+    .playlist-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(220, 53, 69, 0.3);
+        border-color: #dc3545;
+    }
+
+    .playlist-cover-container {
+        position: relative;
+        cursor: pointer;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .playlist-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .playlist-card:hover .playlist-cover {
+        transform: scale(1.05);
+    }
+
+    .play-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(220, 53, 69, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+        font-size: 2.5rem;
+    }
+
+    .playlist-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .song-count {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+    }
+
+    .playlist-info {
+        padding: 20px;
+    }
+
+    .playlist-name {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .playlist-description {
+        color: #ccc;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .empty-state {
+        background: #1a1a1a;
+        border-radius: 15px;
+        margin: 40px 0;
+        padding: 60px 40px;
+        border: 1px solid #333;
+    }
+
+    .song-list {
+        background: #1a1a1a;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #333;
+    }
+
+    .song-item {
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .song-item:hover {
+        background: #2a2a2a;
+    }
+
+    .song-item:last-child {
+        border-bottom: none;
+    }
+
+    .play-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .song-title {
+        font-weight: 600;
+        color: white;
+        margin-bottom: 2px;
+    }
+
+    .modal-content {
+        border: 1px solid #444;
+    }
+
+    .playlist-option:hover {
+        background: #333 !important;
+    }
+
+    .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>

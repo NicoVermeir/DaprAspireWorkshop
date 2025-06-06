@@ -1,0 +1,21 @@
+﻿@inherits LayoutComponentBase
+@using Metalify.Components.Layout
+
+<div class="metalify-app">
+    <!-- Navigation Header -->
+    <NavigationBar />
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        @Body
+    </main>
+    
+    <!-- Audio Player Footer -->
+    <AudioPlayer />
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

@@ -1,0 +1,36 @@
+@rendermode InteractiveWebAssembly
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject IAudioPlayerService AudioPlayerService
+
+<div class="song-card">
+    <div class="card bg-dark text-light h-100 hover-scale">
+        <div class="card-body">
+            <h6 class="card-title text-truncate">@Song.Title</h6>
+            <p class="card-text text-muted small">@Song.ArtistName</p>
+            <p class="card-text text-muted small">@Song.Duration.ToString(@"mm\:ss")</p>
+            <button class="btn btn-sm btn-outline-danger" @onclick="PlaySong">
+                <i class="fas fa-play"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Song Song { get; set; } = null!;
+
+    private async Task PlaySong()
+    {
+        await AudioPlayerService.PlayAsync(Song);
+    }
+}
+
+<style>
+    .song-card .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+    .song-card .hover-scale:hover {
+        transform: scale(1.05);
+    }
+</style>

@@ -1,0 +1,249 @@
+@page "/artists"
+@page "/artists/{ArtistId:guid}"
+@rendermode InteractiveServer
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject IMusicDataService MusicDataService
+@inject IAudioPlayerService AudioPlayerService
+@inject ILogger<Artists> Logger
+
+<div class="container-fluid py-4">
+    @if (ArtistId.HasValue)
+    {
+        <!-- Artist Detail View -->
+        @if (currentArtist != null)
+        {
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <img src="@currentArtist.ImageUrl" alt="@currentArtist.Name" class="img-fluid rounded shadow" />
+                </div>
+                <div class="col-md-8">
+                    <h1 class="display-4 text-light mb-3">@currentArtist.Name</h1>
+                    <p class="text-muted lead">@string.Join(", ", currentArtist.Genres)</p>
+                    <p class="text-light">@currentArtist.Bio</p>
+                    <p class="text-muted">@currentArtist.Country • Formed: @currentArtist.FormedYear</p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger" @onclick="PlayArtistSongs">
+                            <i class="fas fa-play"></i> Play All
+                        </button>
+                        <button class="btn btn-outline-light" @onclick="ShuffleArtistSongs">
+                            <i class="fas fa-random"></i> Shuffle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Artist Albums -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="text-light mb-3">Albums</h3>
+                    <div class="row">
+                        @foreach (var album in artistAlbums)
+                        {
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card bg-dark text-light h-100 hover-scale">
+                                    <img src="@album.CoverImageUrl" class="card-img-top" alt="@album.Title" />
+                                    <div class="card-body">
+                                        <h5 class="card-title">@album.Title</h5>
+                                        <p class="card-text text-muted">@album.ReleaseYear</p>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => PlayAlbum(album)">
+                                            <i class="fas fa-play"></i> Play
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popular Songs -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="text-light mb-3">Popular Songs</h3>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th>Title</th>
+                                    <th>Album</th>
+                                    <th>Duration</th>
+                                    <th width="10%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < artistSongs.Count; i++)
+                                {
+                                    var song = artistSongs[i];
+                                    var index = i;
+                                    <tr>
+                                        <td>@(index + 1)</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">@song.Title</div>
+                                                    <div class="text-muted small">@song.ArtistName</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@song.AlbumTitle</td>
+                                        <td>@song.Duration.ToString(@"mm\:ss")</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => PlaySong(song)">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-3">Loading artist...</p>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Artists List View -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-light">Artists</h1>
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-light" @onclick='() => sortBy = "name"' disabled="@(sortBy == "name")">
+                    Name
+                </button>
+                <button class="btn btn-outline-light" @onclick='() => sortBy = "genre"' disabled="@(sortBy == "genre")">
+                    Genre
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach (var artist in GetSortedArtists())
+            {
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card bg-dark text-light h-100 hover-scale">
+                        <img src="@artist.ImageUrl" class="card-img-top" alt="@artist.Name" style="height: 300px; object-fit: cover;" />
+                        <div class="card-body">
+                            <h5 class="card-title">@artist.Name</h5>
+                            <p class="card-text text-muted">@string.Join(", ", artist.Genres)</p>
+                            <div class="d-flex gap-2">
+                                <a href="/artists/@artist.Id" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => PlayArtistSongs(artist)">
+                                    <i class="fas fa-play"></i> Play
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? ArtistId { get; set; }
+
+    private List<Artist> allArtists = new();
+    private Artist? currentArtist;
+    private List<Album> artistAlbums = new();
+    private List<Song> artistSongs = new();
+    private string sortBy = "name";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            allArtists = (await MusicDataService.GetArtistsAsync()).ToList();
+            
+            if (ArtistId.HasValue)
+            {
+                await LoadArtistDetails();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading artists");
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ArtistId.HasValue)
+        {
+            await LoadArtistDetails();
+        }
+    }
+
+    private async Task LoadArtistDetails()
+    {
+        if (!ArtistId.HasValue) return;
+
+        currentArtist = allArtists.FirstOrDefault(a => a.Id == ArtistId.Value);
+        
+        if (currentArtist != null)
+        {
+            var allAlbums = await MusicDataService.GetAlbumsAsync();
+            artistAlbums = allAlbums.Where(a => a.ArtistId == currentArtist.Id).ToList();
+            
+            var allSongs = await MusicDataService.GetSongsAsync();
+            artistSongs = allSongs.Where(s => s.ArtistId == currentArtist.Id).ToList();
+        }
+    }
+
+    private IEnumerable<Artist> GetSortedArtists()
+    {
+        return sortBy switch
+        {
+            "genre" => allArtists.OrderBy(a => string.Join(", ", a.Genres)).ThenBy(a => a.Name),
+            _ => allArtists.OrderBy(a => a.Name)
+        };
+    }
+
+    private async Task PlayArtistSongs()
+    {
+        if (currentArtist != null)
+        {
+            await AudioPlayerService.PlayAsync(artistSongs);
+        }
+    }
+
+    private async Task PlayArtistSongs(Artist artist)
+    {
+        var allSongs = await MusicDataService.GetSongsAsync();
+        var songs = allSongs.Where(s => s.ArtistId == artist.Id).ToList();
+        await AudioPlayerService.PlayAsync(songs);
+    }
+
+    private async Task ShuffleArtistSongs()
+    {
+        if (currentArtist != null)
+        {
+            var shuffled = artistSongs.OrderBy(x => Guid.NewGuid()).ToList();
+            await AudioPlayerService.PlayAsync(shuffled);
+        }
+    }
+
+    private async Task PlayAlbum(Album album)
+    {
+        var allSongs = await MusicDataService.GetSongsAsync();
+        var albumSongs = allSongs.Where(s => s.AlbumId == album.Id).ToList();
+        await AudioPlayerService.PlayAsync(albumSongs);
+    }
+
+    private async Task PlaySong(Song song)
+    {
+        await AudioPlayerService.PlayAsync(song);
+    }
+}

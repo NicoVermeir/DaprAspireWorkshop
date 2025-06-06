@@ -1,0 +1,47 @@
+@rendermode InteractiveWebAssembly
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject IAudioPlayerService AudioPlayerService
+
+<div class="album-card">
+    <div class="card bg-dark text-light h-100 hover-scale">
+        <img src="@Album.CoverImageUrl" class="card-img-top" alt="@Album.Title" style="height: 200px; object-fit: cover;" />
+        <div class="card-body">
+            <h6 class="card-title text-truncate">@Album.Title</h6>
+            <p class="card-text text-muted small">@Album.ArtistName</p>
+            <p class="card-text text-muted small">@Album.ReleaseYear</p>
+            <div class="d-flex gap-1">
+                <a href="/albums/@Album.Id" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-danger" @onclick="PlayAlbum">
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Album Album { get; set; } = null!;
+    [Parameter] public List<Song> Songs { get; set; } = new();
+
+    private async Task PlayAlbum()
+    {
+        var albumSongs = Songs.Where(s => s.AlbumId == Album.Id).ToList();
+        if (albumSongs.Any())
+        {
+            await AudioPlayerService.PlayAsync(albumSongs);
+        }
+    }
+}
+
+<style>
+    .album-card .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+    .album-card .hover-scale:hover {
+        transform: scale(1.05);
+    }
+</style>

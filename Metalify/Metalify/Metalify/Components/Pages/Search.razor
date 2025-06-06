@@ -1,0 +1,480 @@
+@page "/search"
+@rendermode InteractiveServer
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@using Microsoft.AspNetCore.Components.Web
+@inject ISearchService SearchService
+@inject IAudioPlayerService AudioPlayerService
+@inject NavigationManager Navigation
+
+<PageTitle>Search - Metalify</PageTitle>
+
+<div class="search-page">
+    <div class="search-header mb-4">
+        <h1 class="mb-3">
+            <i class="fas fa-search text-danger"></i> Search Heavy Metal Music
+        </h1>
+        
+        <div class="search-container">
+            <div class="input-group input-group-lg">
+                <input type="text" class="form-control" placeholder="Search for bands, albums, songs, or playlists..." 
+                       @bind="searchQuery" @onkeypress="HandleKeyPress" @ref="searchInput" />
+                <button class="btn btn-danger" type="button" @onclick="PerformSearch" disabled="@isSearching">
+                    @if (isSearching)
+                    {
+                        <i class="fas fa-spinner fa-spin"></i>
+                    }
+                    else
+                    {
+                        <i class="fas fa-search"></i>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(searchQuery) && searchResults != null)
+    {
+        <div class="search-results">
+            <!-- Artists Results -->
+            @if (searchResults.Artists.Any())
+            {
+                <section class="results-section mb-5">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i> Artists (@searchResults.Artists.Count())
+                    </h3>
+                    <div class="row">
+                        @foreach (var artist in searchResults.Artists.Take(6))
+                        {
+                            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-3">
+                                <div class="artist-card" @onclick="() => ViewArtist(artist)">
+                                    <img src="@artist.ImageUrl" alt="@artist.Name" class="artist-image" />
+                                    <div class="artist-info">
+                                        <h6 class="artist-name">@artist.Name</h6>
+                                        <small class="text-muted">@artist.Country</small>
+                                        <div class="genres">
+                                            @foreach (var genre in artist.Genres.Take(2))
+                                            {
+                                                <span class="badge bg-secondary me-1">@genre</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Albums Results -->
+            @if (searchResults.Albums.Any())
+            {
+                <section class="results-section mb-5">
+                    <h3 class="section-title">
+                        <i class="fas fa-compact-disc"></i> Albums (@searchResults.Albums.Count())
+                    </h3>
+                    <div class="row">
+                        @foreach (var album in searchResults.Albums.Take(6))
+                        {
+                            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-3">
+                                <div class="album-card" @onclick="() => PlayAlbum(album)">
+                                    <div class="album-cover-container">
+                                        <img src="@album.CoverImageUrl" alt="@album.Title" class="album-cover" />
+                                        <div class="play-overlay">
+                                            <i class="fas fa-play"></i>
+                                        </div>
+                                    </div>
+                                    <div class="album-info">
+                                        <h6 class="album-title">@album.Title</h6>
+                                        <small class="text-muted">@album.ArtistName • @album.ReleaseYear</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Songs Results -->
+            @if (searchResults.Songs.Any())
+            {
+                <section class="results-section mb-5">
+                    <h3 class="section-title">
+                        <i class="fas fa-music"></i> Songs (@searchResults.Songs.Count())
+                    </h3>
+                    <div class="song-list">
+                        @foreach (var (song, index) in searchResults.Songs.Take(10).Select((s, i) => (s, i + 1)))
+                        {
+                            <div class="song-item d-flex align-items-center p-3 @(IsCurrentSong(song) ? "active" : "")" 
+                                 @onclick="() => PlaySong(song)">
+                                <div class="song-number me-3">
+                                    @if (IsCurrentSong(song) && isPlaying)
+                                    {
+                                        <i class="fas fa-volume-up text-danger"></i>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-light play-btn">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    }
+                                </div>
+                                <div class="song-details flex-grow-1">
+                                    <div class="song-title">@song.Title</div>
+                                    <div class="song-artist text-muted">@song.ArtistName • @song.AlbumTitle</div>
+                                </div>
+                                <div class="song-duration text-muted me-3">
+                                    @FormatDuration(song.Duration)
+                                </div>
+                                <div class="song-actions">
+                                    <button class="btn btn-sm btn-outline-light me-2" @onclick:stopPropagation="true" 
+                                            @onclick="() => AddToPlaylist(song)">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" @onclick:stopPropagation="true">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Playlists Results -->
+            @if (searchResults.Playlists.Any())
+            {
+                <section class="results-section mb-5">
+                    <h3 class="section-title">
+                        <i class="fas fa-list-music"></i> Playlists (@searchResults.Playlists.Count())
+                    </h3>
+                    <div class="row">
+                        @foreach (var playlist in searchResults.Playlists)
+                        {
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                                <div class="playlist-card" @onclick="() => PlayPlaylist(playlist)">
+                                    <div class="playlist-cover-container">
+                                        <img src="@playlist.CoverImageUrl" alt="@playlist.Name" class="playlist-cover" />
+                                        <div class="play-overlay">
+                                            <i class="fas fa-play"></i>
+                                        </div>
+                                    </div>
+                                    <div class="playlist-info">
+                                        <h6 class="playlist-name">@playlist.Name</h6>
+                                        <small class="text-muted">@playlist.Songs.Count songs</small>
+                                        <p class="playlist-description">@playlist.Description</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            @if (!searchResults.Artists.Any() && !searchResults.Albums.Any() && 
+                !searchResults.Songs.Any() && !searchResults.Playlists.Any())
+            {
+                <div class="no-results text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4>No results found for "@searchQuery"</h4>
+                    <p class="text-muted">Try searching for different keywords or check your spelling.</p>
+                </div>
+            }
+        </div>
+    }
+    else if (string.IsNullOrEmpty(searchQuery))
+    {
+        <div class="search-suggestions">
+            <h3 class="mb-4">Popular Searches</h3>
+            <div class="suggestion-tags">
+                @foreach (var suggestion in popularSearches)
+                {
+                    <button class="btn btn-outline-light me-2 mb-2" @onclick="() => SearchSuggestion(suggestion)">
+                        @suggestion
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public string? Q { get; set; }
+
+    private ElementReference searchInput;
+    private string searchQuery = string.Empty;
+    private SearchResults? searchResults;
+    private bool isSearching = false;
+    private bool isPlaying = false;
+    private Song? currentSong;
+
+    private readonly string[] popularSearches = 
+    {
+        "Metallica", "Iron Maiden", "Black Sabbath", "Judas Priest", 
+        "Slayer", "Megadeth", "Thrash Metal", "Heavy Metal", "Death Metal"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Q))
+        {
+            searchQuery = Q;
+            await PerformSearch();
+        }
+
+        // Subscribe to player events
+        AudioPlayerService.PlayStateChanged += OnPlayStateChanged;
+        AudioPlayerService.CurrentSongChanged += OnCurrentSongChanged;
+
+        // Get current state
+        isPlaying = AudioPlayerService.IsPlaying;
+        currentSong = AudioPlayerService.CurrentSong;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await searchInput.FocusAsync();
+        }
+    }
+
+    private async Task PerformSearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery)) return;
+
+        isSearching = true;
+        StateHasChanged();
+
+        try
+        {
+            searchResults = await SearchService.SearchAsync(searchQuery);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Search error: {ex.Message}");
+        }
+        finally
+        {
+            isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await PerformSearch();
+        }
+    }
+
+    private async Task SearchSuggestion(string suggestion)
+    {
+        searchQuery = suggestion;
+        await PerformSearch();
+    }
+
+    private async Task PlaySong(Song song)
+    {
+        await AudioPlayerService.PlayAsync(song);
+    }
+
+    private async Task PlayAlbum(Album album)
+    {
+        // In a real app, we'd fetch the album's songs
+        if (searchResults?.Songs != null)
+        {
+            var albumSongs = searchResults.Songs.Where(s => s.AlbumId == album.Id).ToList();
+            if (albumSongs.Any())
+            {
+                await AudioPlayerService.PlayAsync(albumSongs);
+            }
+        }
+    }
+
+    private async Task PlayPlaylist(Playlist playlist)
+    {
+        if (playlist.Songs.Any())
+        {
+            await AudioPlayerService.PlayAsync(playlist.Songs);
+        }
+    }
+
+    private void ViewArtist(Artist artist)
+    {
+        Navigation.NavigateTo($"/artist/{artist.Id}");
+    }
+
+    private void AddToPlaylist(Song song)
+    {
+        // This would open a playlist selection modal
+        Console.WriteLine($"Add {song.Title} to playlist");
+    }
+
+    private bool IsCurrentSong(Song song)
+    {
+        return currentSong?.Id == song.Id;
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalMinutes}:{duration.Seconds:D2}";
+    }
+
+    private void OnPlayStateChanged(object? sender, bool playing)
+    {
+        isPlaying = playing;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnCurrentSongChanged(object? sender, Song? song)
+    {
+        currentSong = song;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AudioPlayerService.PlayStateChanged -= OnPlayStateChanged;
+        AudioPlayerService.CurrentSongChanged -= OnCurrentSongChanged;
+    }
+}
+
+<style>
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        color: #dc3545;
+        font-weight: bold;
+        border-bottom: 2px solid #dc3545;
+        padding-bottom: 8px;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .artist-card, .album-card, .playlist-card {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 1px solid #333;
+        height: 100%;
+    }
+
+    .artist-card:hover, .album-card:hover, .playlist-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
+        border-color: #dc3545;
+    }
+
+    .artist-image, .album-cover, .playlist-cover {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .album-cover-container, .playlist-cover-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .play-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(220, 53, 69, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .album-card:hover .play-overlay,
+    .playlist-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .song-list {
+        background: #1a1a1a;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #333;
+    }
+
+    .song-item {
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .song-item:hover {
+        background: #2a2a2a;
+    }
+
+    .song-item.active {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+    }
+
+    .song-item:last-child {
+        border-bottom: none;
+    }
+
+    .play-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .song-title {
+        font-weight: 600;
+        color: white;
+        margin-bottom: 2px;
+    }
+
+    .genres .badge {
+        font-size: 0.7rem;
+    }
+
+    .playlist-description {
+        font-size: 0.8rem;
+        color: #ccc;
+        margin-bottom: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .suggestion-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .no-results {
+        color: #666;
+    }
+
+    .input-group-lg .form-control {
+        font-size: 1.1rem;
+        padding: 12px 16px;
+    }
+</style>

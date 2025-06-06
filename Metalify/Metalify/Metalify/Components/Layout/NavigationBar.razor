@@ -1,0 +1,131 @@
+@rendermode InteractiveServer
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject ISearchService SearchService
+@inject NavigationManager Navigation
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/" style="color: #dc3545;">
+            <i class="fas fa-metal"></i> Metalify
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Navigation Links -->
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/artists">
+                        <i class="fas fa-users"></i> Artists
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/albums">
+                        <i class="fas fa-compact-disc"></i> Albums
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/playlists">
+                        <i class="fas fa-list-music"></i> Playlists
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Search Bar -->
+            <div class="d-flex me-3" style="width: 300px;">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search for bands, albums, songs..." 
+                           @bind="searchQuery" @onkeypress="HandleKeyPress" />
+                    <button class="btn btn-outline-secondary" type="button" @onclick="PerformSearch">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> User
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog"></i> Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private string searchQuery = string.Empty;
+
+    private void PerformSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(searchQuery)}");
+        }
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            PerformSearch();
+        }
+    }
+}
+
+<style>
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+
+    .navbar {
+        border-bottom: 1px solid #333;
+    }
+
+    .nav-link:hover {
+        color: #dc3545 !important;
+    }
+
+    .navbar-brand:hover {
+        color: #dc3545 !important;
+    }
+
+    .input-group .form-control {
+        background-color: #2a2a2a;
+        border-color: #444;
+        color: white;
+    }
+
+    .input-group .form-control:focus {
+        background-color: #2a2a2a;
+        border-color: #dc3545;
+        color: white;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+
+    .btn-outline-secondary {
+        border-color: #444;
+        color: #ccc;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+</style>

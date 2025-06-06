@@ -1,0 +1,47 @@
+@using Metalify.Client.Models
+
+<div class="artist-card">
+    <div class="card bg-dark text-light h-100 hover-scale">
+        <img src="@Artist.ImageUrl" class="card-img-top" alt="@Artist.Name" style="height: 250px; object-fit: cover;" />
+        <div class="card-body">
+            <h6 class="card-title">@Artist.Name</h6>
+            <p class="card-text text-muted small">@string.Join(", ", Artist.Genres)</p>
+            <p class="card-text text-muted small">@Artist.Country</p>
+            <div class="d-flex gap-1">
+                <a href="/artists/@Artist.Id" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+                @if (ShowPlayButton)
+                {
+                    <button class="btn btn-sm btn-outline-danger" @onclick="OnPlayClicked">
+                        <i class="fas fa-play"></i>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Artist Artist { get; set; } = null!;
+    [Parameter] public bool ShowPlayButton { get; set; } = true;
+    [Parameter] public EventCallback<Artist> OnPlay { get; set; }
+
+    private async Task OnPlayClicked()
+    {
+        if (OnPlay.HasDelegate)
+        {
+            await OnPlay.InvokeAsync(Artist);
+        }
+    }
+}
+
+<style>
+    .artist-card .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+    .artist-card .hover-scale:hover {
+        transform: scale(1.05);
+    }
+</style>

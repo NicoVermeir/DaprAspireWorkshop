@@ -1,0 +1,380 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Metalify.Client.Services.Interfaces
+@using Metalify.Client.Models
+@inject IMusicDataService MusicDataService
+@inject IAudioPlayerService AudioPlayerService
+
+<PageTitle>Metalify - Heavy Metal Music Streaming</PageTitle>
+
+<div class="home-page">
+    <!-- Hero Section -->
+    <section class="hero-section mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">
+                    Welcome to <span class="text-danger">Metalify</span>
+                </h1>
+                <p class="lead mb-4">
+                    The ultimate destination for heavy metal music. Discover legendary bands, 
+                    explore classic albums, and headbang to the most brutal tracks ever created.
+                </p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-danger btn-lg" @onclick="PlayFeaturedPlaylist">
+                        <i class="fas fa-play"></i> Start Listening
+                    </button>
+                    <button class="btn btn-outline-light btn-lg" @onclick="NavigateToSearch">
+                        <i class="fas fa-search"></i> Explore Music
+                    </button>
+                </div>
+            </div>            <div class="col-lg-6 text-center">
+                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+                     alt="Heavy Metal Concert" class="img-fluid rounded shadow" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Artists -->
+    <section class="featured-artists mb-5">
+        <h2 class="section-title mb-4"><i class="fas fa-star"></i> Featured Artists</h2>
+        <div class="row">
+            @if (featuredArtists != null)
+            {
+                @foreach (var artist in featuredArtists.Take(6))
+                {
+                    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                        <div class="artist-card">
+                            <img src="@artist.ImageUrl" alt="@artist.Name" class="artist-image" />
+                            <div class="artist-info">
+                                <h6 class="artist-name">@artist.Name</h6>
+                                <small class="text-muted">@artist.Country</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <!-- Popular Albums -->
+    <section class="popular-albums mb-5">
+        <h2 class="section-title mb-4"><i class="fas fa-fire"></i> Popular Albums</h2>
+        <div class="row">
+            @if (popularAlbums != null)
+            {
+                @foreach (var album in popularAlbums.Take(6))
+                {
+                    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                        <div class="album-card" @onclick="() => PlayAlbum(album)">
+                            <div class="album-cover-container">
+                                <img src="@album.CoverImageUrl" alt="@album.Title" class="album-cover" />
+                                <div class="play-overlay">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                            </div>
+                            <div class="album-info">
+                                <h6 class="album-title">@album.Title</h6>
+                                <small class="text-muted">@album.ArtistName • @album.ReleaseYear</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <!-- Top Songs -->
+    <section class="top-songs">
+        <h2 class="section-title mb-4"><i class="fas fa-chart-line"></i> Top Metal Tracks</h2>
+        <div class="row">
+            <div class="col-lg-8">
+                @if (topSongs != null)
+                {
+                    <div class="song-list">
+                        @foreach (var (song, index) in topSongs.Take(10).Select((s, i) => (s, i + 1)))
+                        {
+                            <div class="song-item d-flex align-items-center p-3 @(IsCurrentSong(song) ? "active" : "")" 
+                                 @onclick="() => PlaySong(song)">
+                                <div class="song-number me-3">
+                                    @if (IsCurrentSong(song) && isPlaying)
+                                    {
+                                        <i class="fas fa-volume-up text-danger"></i>
+                                    }
+                                    else
+                                    {
+                                        <span>@index</span>
+                                    }
+                                </div>
+                                <div class="song-details flex-grow-1">
+                                    <div class="song-title">@song.Title</div>
+                                    <div class="song-artist text-muted">@song.ArtistName</div>
+                                </div>
+                                <div class="song-duration text-muted">
+                                    @FormatDuration(song.Duration)
+                                </div>
+                                <div class="song-actions ms-3">
+                                    <button class="btn btn-sm btn-outline-light" @onclick:stopPropagation="true">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="col-lg-4">
+                <div class="stats-card">
+                    <h5><i class="fas fa-headphones"></i> Quick Stats</h5>
+                    <div class="stat-item">
+                        <span class="stat-number">@(featuredArtists?.Count() ?? 0)</span>
+                        <span class="stat-label">Artists</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@(popularAlbums?.Count() ?? 0)</span>
+                        <span class="stat-label">Albums</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@(topSongs?.Count() ?? 0)</span>
+                        <span class="stat-label">Songs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@code {
+    private IEnumerable<Artist>? featuredArtists;
+    private IEnumerable<Album>? popularAlbums;
+    private IEnumerable<Song>? topSongs;
+    private bool isPlaying;
+    private Song? currentSong;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        
+        // Subscribe to player events
+        AudioPlayerService.PlayStateChanged += OnPlayStateChanged;
+        AudioPlayerService.CurrentSongChanged += OnCurrentSongChanged;
+        
+        // Get current state
+        isPlaying = AudioPlayerService.IsPlaying;
+        currentSong = AudioPlayerService.CurrentSong;
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var artistsTask = MusicDataService.GetArtistsAsync();
+            var albumsTask = MusicDataService.GetAlbumsAsync();
+            var songsTask = MusicDataService.GetSongsAsync();
+
+            await Task.WhenAll(artistsTask, albumsTask, songsTask);
+
+            featuredArtists = await artistsTask;
+            popularAlbums = await albumsTask;
+            topSongs = await songsTask;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Log error
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private async Task PlaySong(Song song)
+    {
+        await AudioPlayerService.PlayAsync(song);
+    }
+
+    private async Task PlayAlbum(Album album)
+    {
+        var songs = topSongs?.Where(s => s.AlbumId == album.Id).ToList() ?? new List<Song>();
+        if (songs.Any())
+        {
+            await AudioPlayerService.PlayAsync(songs);
+        }
+    }
+
+    private async Task PlayFeaturedPlaylist()
+    {
+        if (topSongs != null && topSongs.Any())
+        {
+            await AudioPlayerService.PlayAsync(topSongs.Take(10));
+        }
+    }
+
+    private void NavigateToSearch()
+    {
+        // This would navigate to search page
+    }
+
+    private bool IsCurrentSong(Song song)
+    {
+        return currentSong?.Id == song.Id;
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalMinutes}:{duration.Seconds:D2}";
+    }
+
+    private void OnPlayStateChanged(object? sender, bool playing)
+    {
+        isPlaying = playing;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnCurrentSongChanged(object? sender, Song? song)
+    {
+        currentSong = song;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AudioPlayerService.PlayStateChanged -= OnPlayStateChanged;
+        AudioPlayerService.CurrentSongChanged -= OnCurrentSongChanged;
+    }
+}
+
+<style>
+    .hero-section {
+        padding: 60px 0;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d1b2d 100%);
+        border-radius: 15px;
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        color: #dc3545;
+        font-weight: bold;
+        border-bottom: 2px solid #dc3545;
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+
+    .artist-card, .album-card {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 1px solid #333;
+    }
+
+    .artist-card:hover, .album-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
+        border-color: #dc3545;
+    }
+
+    .artist-image, .album-cover {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .album-cover-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .play-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(220, 53, 69, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+        font-size: 2rem;
+    }
+
+    .album-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .artist-name, .album-title {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .song-list {
+        background: #1a1a1a;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .song-item {
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .song-item:hover {
+        background: #2a2a2a;
+    }
+
+    .song-item.active {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+    }
+
+    .song-number {
+        width: 30px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .song-title {
+        font-weight: 600;
+        color: white;
+    }
+
+    .song-artist {
+        font-size: 0.9rem;
+    }
+
+    .stats-card {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #333;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #333;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .stat-label {
+        color: #ccc;
+    }
+</style>

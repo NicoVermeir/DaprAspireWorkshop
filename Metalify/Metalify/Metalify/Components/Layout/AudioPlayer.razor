@@ -1,0 +1,199 @@
+@rendermode InteractiveServer
+@inject IAudioPlayerService AudioPlayerService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="audio-player bg-dark text-white p-3 border-top">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <!-- Current Song Info -->
+            <div class="col-md-3 d-flex align-items-center">
+                @if (currentSong != null)
+                {
+                    <div class="d-flex align-items-center">
+                        <div class="album-art me-3">                            <img src="@currentSong.AlbumTitle" alt="Album Art" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" 
+                                 onerror="this.src='https://images.unsplash.com/photo-1619983081593-e2ba5b543168?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&h=50&q=80'" />
+                        </div>
+                        <div class="song-info">
+                            <div class="song-title fw-bold">@currentSong.Title</div>
+                            <div class="artist-name text-muted small">@currentSong.ArtistName</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted">No song playing</div>
+                }
+            </div>
+
+            <!-- Player Controls -->
+            <div class="col-md-6">
+                <div class="text-center">
+                    <!-- Control Buttons -->
+                    <div class="mb-2">
+                        <button class="btn btn-outline-light btn-sm me-2" @onclick="PreviousAsync">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        
+                        @if (isPlaying)
+                        {
+                            <button class="btn btn-outline-light btn-lg me-2" @onclick="PauseAsync">
+                                <i class="fas fa-pause"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-light btn-lg me-2" @onclick="ResumeAsync" disabled="@(currentSong == null)">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        }
+                        
+                        <button class="btn btn-outline-light btn-sm me-2" @onclick="NextAsync">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        
+                        <button class="btn btn-outline-light btn-sm" @onclick="StopAsync">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="d-flex align-items-center">
+                        <small class="me-2">@FormatTime(position)</small>
+                        <div class="progress flex-grow-1 mx-2" style="height: 4px; cursor: pointer;" @onclick="SeekToPosition">
+                            <div class="progress-bar bg-success" 
+                                 style="width: @(duration.TotalMilliseconds > 0 ? (position.TotalMilliseconds / duration.TotalMilliseconds * 100) : 0)%"></div>
+                        </div>
+                        <small class="ms-2">@FormatTime(duration)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume Control -->
+            <div class="col-md-3">
+                <div class="d-flex align-items-center justify-content-end">
+                    <i class="fas fa-volume-up me-2"></i>
+                    <input type="range" class="form-range" style="width: 100px;" min="0" max="100" 
+                           value="@((int)(volume * 100))" @oninput="VolumeChanged" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Song? currentSong;
+    private bool isPlaying;
+    private TimeSpan position;
+    private TimeSpan duration;
+    private double volume = 1.0;
+
+    protected override void OnInitialized()
+    {
+        AudioPlayerService.CurrentSongChanged += OnCurrentSongChanged;
+        AudioPlayerService.PlayStateChanged += OnPlayStateChanged;
+        AudioPlayerService.PositionChanged += OnPositionChanged;
+        AudioPlayerService.DurationChanged += OnDurationChanged;
+
+        // Initialize with current values
+        currentSong = AudioPlayerService.CurrentSong;
+        isPlaying = AudioPlayerService.IsPlaying;
+        position = AudioPlayerService.Position;
+        duration = AudioPlayerService.Duration;
+    }
+
+    private void OnCurrentSongChanged(object? sender, Song? song)
+    {
+        currentSong = song;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnPlayStateChanged(object? sender, bool playing)
+    {
+        isPlaying = playing;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnPositionChanged(object? sender, TimeSpan pos)
+    {
+        position = pos;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnDurationChanged(object? sender, TimeSpan dur)
+    {
+        duration = dur;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PauseAsync() => await AudioPlayerService.PauseAsync();
+    private async Task ResumeAsync() => await AudioPlayerService.ResumeAsync();
+    private async Task PreviousAsync() => await AudioPlayerService.PreviousAsync();
+    private async Task NextAsync() => await AudioPlayerService.NextAsync();
+    private async Task StopAsync() => await AudioPlayerService.StopAsync();
+
+    private async Task VolumeChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out var vol))
+        {
+            volume = vol / 100.0;
+            await AudioPlayerService.SetVolumeAsync(volume);
+        }
+    }
+
+    private async Task SeekToPosition(MouseEventArgs e)
+    {
+        if (duration.TotalMilliseconds > 0)
+        {
+            var element = await JSRuntime.InvokeAsync<IJSObjectReference>("document.querySelector", ".progress");
+            var rect = await element.InvokeAsync<dynamic>("getBoundingClientRect");
+            var clickX = e.ClientX - rect.left;
+            var width = rect.width;
+            var percentage = clickX / width;
+            var newPosition = TimeSpan.FromMilliseconds(duration.TotalMilliseconds * percentage);
+            await AudioPlayerService.SeekAsync(newPosition);
+        }
+    }
+
+    private string FormatTime(TimeSpan time)
+    {
+        return $"{(int)time.TotalMinutes}:{time.Seconds:D2}";
+    }
+
+    public void Dispose()
+    {
+        AudioPlayerService.CurrentSongChanged -= OnCurrentSongChanged;
+        AudioPlayerService.PlayStateChanged -= OnPlayStateChanged;
+        AudioPlayerService.PositionChanged -= OnPositionChanged;
+        AudioPlayerService.DurationChanged -= OnDurationChanged;
+    }
+}
+
+<style>
+    .audio-player {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background-color: #1a1a1a !important;
+        border-top: 1px solid #333;
+    }
+
+    .album-art img {
+        border: 1px solid #333;
+    }
+
+    .progress {
+        background-color: #333 !important;
+    }
+
+    .btn-outline-light {
+        border-color: #666;
+    }
+
+    .btn-outline-light:hover {
+        background-color: #333;
+        border-color: #666;
+    }
+</style>
