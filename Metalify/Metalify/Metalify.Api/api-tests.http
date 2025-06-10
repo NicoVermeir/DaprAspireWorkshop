@@ -1,0 +1,62 @@
+### Metalify Catalog API Test Requests
+
+@baseUrl = http://localhost:5101
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get All Artists
+GET {{baseUrl}}/api/artists
+Accept: application/json
+
+### Get Artist by ID (Iron Maiden)
+GET {{baseUrl}}/api/artists/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+### Search Artists
+GET {{baseUrl}}/api/artists/search?q=metal
+Accept: application/json
+
+### Get Artists by Country
+GET {{baseUrl}}/api/artists/country/United%20Kingdom
+Accept: application/json
+
+### Get All Albums
+GET {{baseUrl}}/api/albums
+Accept: application/json
+
+### Get Album by ID (The Number of the Beast)
+GET {{baseUrl}}/api/albums/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+Accept: application/json
+
+### Get Albums by Artist (Iron Maiden)
+GET {{baseUrl}}/api/albums/artist/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+### Get Albums by Year
+GET {{baseUrl}}/api/albums/year/1982
+Accept: application/json
+
+### Search Albums
+GET {{baseUrl}}/api/albums/search?q=master
+Accept: application/json
+
+### Get All Songs
+GET {{baseUrl}}/api/songs
+Accept: application/json
+
+### Get Song by ID
+GET {{baseUrl}}/api/songs/11111111-aaaa-aaaa-aaaa-111111111111
+Accept: application/json
+
+### Get Songs by Album (The Number of the Beast)
+GET {{baseUrl}}/api/songs/album/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+Accept: application/json
+
+### Get Songs by Artist (Iron Maiden)
+GET {{baseUrl}}/api/songs/artist/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+### Search Songs
+GET {{baseUrl}}/api/songs/search?q=paranoid
+Accept: application/json
