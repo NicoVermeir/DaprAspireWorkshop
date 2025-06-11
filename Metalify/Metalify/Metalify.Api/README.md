@@ -9,6 +9,7 @@ A REST API for the Metalify heavy metal music catalog built with ASP.NET Core an
 - **REST Best Practices**: RESTful endpoints following HTTP conventions
 - **OpenAPI/Swagger**: Interactive API documentation
 - **Seeded Data**: Preloaded with classic metal bands, albums, and songs inspired by Metal Archives
+- **Microservice Architecture**: Playlist functionality extracted to separate microservice for better scalability
 
 ## Architecture
 
@@ -89,6 +90,8 @@ The API comes pre-seeded with classic metal bands:
 - **Black Sabbath** (UK, 1968) - Albums: Paranoid
 - **Judas Priest** (UK, 1969)
 - **Megadeth** (US, 1983)
+
+**Note**: Playlist functionality has been extracted to a separate microservice (`Metalify.Playlist.Api`) for better scalability and maintainability.
 
 ## Configuration
 

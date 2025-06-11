@@ -39,16 +39,20 @@ try
         .AddInteractiveWebAssemblyComponents();
 
     // Configure HTTP client for API communication
-    string apiBaseUrl = builder.Configuration["MetalifyApi:BaseUrl"] ?? string.Empty;
-    builder.Services.AddHttpClient<IMusicDataService, ApiMusicDataService>(client =>
+    string catalogApiUrl = builder.Configuration["MetalifyApi:CatalogApiUrl"] ?? string.Empty;
+    builder.Services.AddHttpClient<ICatalogService, CatalogService>(client =>
     {
-        client.BaseAddress = new Uri(apiBaseUrl);
-        client.Timeout = TimeSpan.FromSeconds(30);
+        client.BaseAddress = new Uri(catalogApiUrl);
+    });
+
+    string playlistApiUrl = builder.Configuration["MetalifyApi:PlaylistApiUrl"] ?? string.Empty;
+    builder.Services.AddHttpClient<IPlaylistService, PlaylistService>(client =>
+    {
+        client.BaseAddress = new Uri(playlistApiUrl);
     });
 
     // Register Music Services (for server-side rendering)
     builder.Services.AddScoped<ISearchService, SearchService>();
-    builder.Services.AddScoped<IPlaylistService, PlaylistService>();
     builder.Services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
 
     var app = builder.Build();

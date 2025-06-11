@@ -2,7 +2,7 @@ using Metalify.Client.Models;
 
 namespace Metalify.Services.Interfaces;
 
-public interface IMusicDataService
+public interface ICatalogService
 {
     Task<IEnumerable<Artist>> GetArtistsAsync();
     Task<IEnumerable<Album>> GetAlbumsAsync();

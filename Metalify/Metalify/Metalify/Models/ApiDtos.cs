@@ -58,3 +58,68 @@ public class SongDto
     public string ArtistName { get; set; } = string.Empty;
     public string AudioUrl { get; set; } = string.Empty;
 }
+
+// Playlist API DTOs for communication with the Metalify.Playlist.Api
+public class PlaylistDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public bool IsPublic { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public int SongCount { get; set; }
+    public TimeSpan TotalDuration { get; set; }
+    public List<PlaylistItemDto>? Songs { get; set; }
+}
+
+public class PlaylistSummaryDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public bool IsPublic { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public int SongCount { get; set; }
+    public TimeSpan TotalDuration { get; set; }
+}
+
+public class CreatePlaylistDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public bool IsPublic { get; set; } = true;
+    public string CreatedBy { get; set; } = string.Empty;
+}
+
+public class PlaylistItemDto
+{
+    public Guid Id { get; set; }
+    public Guid SongId { get; set; }
+    public string SongTitle { get; set; } = string.Empty;
+    public string ArtistName { get; set; } = string.Empty;
+    public string AlbumTitle { get; set; } = string.Empty;
+    public TimeSpan Duration { get; set; }
+    public int Position { get; set; }
+    public DateTime AddedAt { get; set; }
+}
+
+public class AddSongToPlaylistDto
+{
+    public Guid SongId { get; set; }
+    public int? Position { get; set; } // If null, add to end
+}
+
+public class UpdatePlaylistDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public bool IsPublic { get; set; }
+}

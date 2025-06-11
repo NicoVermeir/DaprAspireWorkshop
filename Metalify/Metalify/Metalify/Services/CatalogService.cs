@@ -7,7 +7,7 @@ namespace Metalify.Services;
 /// <summary>
 /// HTTP-based music data service that calls the Metalify.Api with resilience patterns
 /// </summary>
-public class ApiMusicDataService(HttpClient httpClient, ILogger<ApiMusicDataService> logger) : IMusicDataService
+public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logger) : ICatalogService
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
     {

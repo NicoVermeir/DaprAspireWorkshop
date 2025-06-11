@@ -3,7 +3,7 @@ using Metalify.Services.Interfaces;
 
 namespace Metalify.Services;
 
-public class SearchService(IMusicDataService musicDataService, ILogger<SearchService> logger)
+public class SearchService(ICatalogService musicDataService, ILogger<SearchService> logger)
     : ISearchService
 {
     public async Task<SearchResults> SearchAsync(string query)

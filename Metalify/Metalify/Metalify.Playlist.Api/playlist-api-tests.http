@@ -1,0 +1,60 @@
+### Metalify Playlist API Tests
+
+@baseUrl = https://localhost:7228
+@contentType = application/json
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get Root
+GET {{baseUrl}}/
+
+### Get All Playlists
+GET {{baseUrl}}/api/playlists
+
+### Get Public Playlists
+GET {{baseUrl}}/api/playlists/public
+
+### Search Playlists
+GET {{baseUrl}}/api/playlists/search?q=metal
+
+### Create Playlist
+POST {{baseUrl}}/api/playlists
+Content-Type: {{contentType}}
+
+{
+    "name": "My Heavy Metal Collection",
+    "description": "A collection of the heaviest metal tracks",
+    "coverImageUrl": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&q=80",
+    "isPublic": true,
+    "createdBy": "testuser"
+}
+
+### Get Playlist by ID (replace with actual ID from create response)
+@playlistId = 00000000-0000-0000-0000-000000000000
+GET {{baseUrl}}/api/playlists/{{playlistId}}
+
+### Update Playlist
+PUT {{baseUrl}}/api/playlists/{{playlistId}}
+Content-Type: {{contentType}}
+
+{
+    "name": "Updated Heavy Metal Collection",
+    "description": "An updated collection of the heaviest metal tracks"
+}
+
+### Add Song to Playlist (replace with actual song ID from catalog API)
+@songId = 00000000-0000-0000-0000-000000000000
+POST {{baseUrl}}/api/playlists/{{playlistId}}/songs
+Content-Type: {{contentType}}
+
+{
+    "songId": "{{songId}}",
+    "position": 1
+}
+
+### Remove Song from Playlist
+DELETE {{baseUrl}}/api/playlists/{{playlistId}}/songs/{{songId}}
+
+### Delete Playlist
+DELETE {{baseUrl}}/api/playlists/{{playlistId}}
