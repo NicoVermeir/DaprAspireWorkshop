@@ -1,5 +1,6 @@
-using Metalify.Client.Pages;
 using Metalify.Components;
+using Metalify.Services;
+using Metalify.Services.Interfaces;
 using Serilog;
 using Serilog.Events;
 
@@ -28,18 +29,27 @@ try
         .WriteTo.File(
             path: "logs/metalify-.log",
             rollingInterval: RollingInterval.Day,
-            restrictedToMinimumLevel: context.HostingEnvironment.IsDevelopment() 
-                ? LogEventLevel.Information 
-                : LogEventLevel.Warning));    // Add services to the container.
+            restrictedToMinimumLevel: context.HostingEnvironment.IsDevelopment()
+                ? LogEventLevel.Information
+                : LogEventLevel.Warning));
+
+    // Add services to the container.
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents()
         .AddInteractiveWebAssemblyComponents();
 
+    // Configure HTTP client for API communication
+    string apiBaseUrl = builder.Configuration["MetalifyApi:BaseUrl"] ?? string.Empty;
+    builder.Services.AddHttpClient<IMusicDataService, ApiMusicDataService>(client =>
+    {
+        client.BaseAddress = new Uri(apiBaseUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+
     // Register Music Services (for server-side rendering)
-    builder.Services.AddScoped<Metalify.Client.Services.Interfaces.IMusicDataService, Metalify.Client.Services.FakeMusicDataService>();
-    builder.Services.AddScoped<Metalify.Client.Services.Interfaces.ISearchService, Metalify.Client.Services.SearchService>();
-    builder.Services.AddScoped<Metalify.Client.Services.Interfaces.IPlaylistService, Metalify.Client.Services.PlaylistService>();
-    builder.Services.AddSingleton<Metalify.Client.Services.Interfaces.IAudioPlayerService, Metalify.Client.Services.AudioPlayerService>();
+    builder.Services.AddScoped<ISearchService, SearchService>();
+    builder.Services.AddScoped<IPlaylistService, PlaylistService>();
+    builder.Services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
 
     var app = builder.Build();
 

@@ -1,8 +1,7 @@
 using Metalify.Client.Models;
-using Metalify.Client.Services.Interfaces;
-using Microsoft.Extensions.Logging;
+using Metalify.Services.Interfaces;
 
-namespace Metalify.Client.Services;
+namespace Metalify.Services;
 
 public class FakeMusicDataService : IMusicDataService
 {

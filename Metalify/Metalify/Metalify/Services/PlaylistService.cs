@@ -1,20 +1,12 @@
 using Metalify.Client.Models;
-using Metalify.Client.Services.Interfaces;
-using Microsoft.Extensions.Logging;
+using Metalify.Services.Interfaces;
 
-namespace Metalify.Client.Services;
+namespace Metalify.Services;
 
-public class PlaylistService : IPlaylistService
+public class PlaylistService(IMusicDataService musicDataService, ILogger<PlaylistService> logger)
+    : IPlaylistService
 {
-    private readonly List<Playlist> _playlists = new();
-    private readonly IMusicDataService _musicDataService;
-    private readonly ILogger<PlaylistService> _logger;
-
-    public PlaylistService(IMusicDataService musicDataService, ILogger<PlaylistService> logger)
-    {
-        _musicDataService = musicDataService;
-        _logger = logger;
-    }
+    private readonly List<Playlist> _playlists = [];
 
     public async Task<IEnumerable<Playlist>> GetUserPlaylistsAsync()
     {
@@ -37,7 +29,7 @@ public class PlaylistService : IPlaylistService
         };
 
         _playlists.Add(playlist);
-        _logger.LogInformation("Created playlist: {PlaylistName}", name);
+        logger.LogInformation("Created playlist: {PlaylistName}", name);
         
         return playlist;
     }
@@ -49,14 +41,14 @@ public class PlaylistService : IPlaylistService
         var playlist = _playlists.FirstOrDefault(p => p.Id == playlistId);
         if (playlist == null)
         {
-            _logger.LogWarning("Playlist not found: {PlaylistId}", playlistId);
+            logger.LogWarning("Playlist not found: {PlaylistId}", playlistId);
             return false;
         }
 
-        var song = await _musicDataService.GetSongByIdAsync(songId);
+        var song = await musicDataService.GetSongByIdAsync(songId);
         if (song == null)
         {
-            _logger.LogWarning("Song not found: {SongId}", songId);
+            logger.LogWarning("Song not found: {SongId}", songId);
             return false;
         }
 
@@ -64,7 +56,7 @@ public class PlaylistService : IPlaylistService
         {
             playlist.Songs.Add(song);
             playlist.UpdatedAt = DateTime.Now;
-            _logger.LogInformation("Added song {SongTitle} to playlist {PlaylistName}", song.Title, playlist.Name);
+            logger.LogInformation("Added song {SongTitle} to playlist {PlaylistName}", song.Title, playlist.Name);
         }
 
         return true;
@@ -82,7 +74,7 @@ public class PlaylistService : IPlaylistService
         {
             playlist.Songs.Remove(songToRemove);
             playlist.UpdatedAt = DateTime.Now;
-            _logger.LogInformation("Removed song {SongTitle} from playlist {PlaylistName}", songToRemove.Title, playlist.Name);
+            logger.LogInformation("Removed song {SongTitle} from playlist {PlaylistName}", songToRemove.Title, playlist.Name);
             return true;
         }
 
@@ -97,7 +89,7 @@ public class PlaylistService : IPlaylistService
         if (playlist != null)
         {
             _playlists.Remove(playlist);
-            _logger.LogInformation("Deleted playlist: {PlaylistName}", playlist.Name);
+            logger.LogInformation("Deleted playlist: {PlaylistName}", playlist.Name);
             return true;
         }
 
@@ -114,7 +106,7 @@ public class PlaylistService : IPlaylistService
             existingPlaylist.Name = playlist.Name;
             existingPlaylist.Description = playlist.Description;
             existingPlaylist.UpdatedAt = DateTime.Now;
-            _logger.LogInformation("Updated playlist: {PlaylistName}", playlist.Name);
+            logger.LogInformation("Updated playlist: {PlaylistName}", playlist.Name);
             return true;
         }
 

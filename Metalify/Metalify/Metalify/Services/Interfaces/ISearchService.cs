@@ -1,6 +1,6 @@
 using Metalify.Client.Models;
 
-namespace Metalify.Client.Services.Interfaces;
+namespace Metalify.Services.Interfaces;
 
 public interface ISearchService
 {

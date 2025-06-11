@@ -1,0 +1,164 @@
+@using System.Text.Json
+@inject HttpClient Http
+@inject ILogger<ApiHealthCheck> Logger
+@implements IDisposable
+
+<div class="api-health-status @GetStatusClass()">
+    <div class="health-indicator">
+        <span class="status-dot"></span>
+        <span class="status-text">API: @_status</span>
+    </div>
+    @if (!string.IsNullOrEmpty(_lastChecked))
+    {
+        <small class="last-checked">Last checked: @_lastChecked</small>
+    }
+</div>
+
+@code {
+    private string _status = "Checking...";
+    private string _lastChecked = string.Empty;
+    private Timer? _timer;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initial health check
+        await CheckApiHealth();
+        
+        // Set up periodic health checks every 30 seconds
+        _timer = new Timer(async _ => await CheckApiHealth(), null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+    }
+
+    private async Task CheckApiHealth()
+    {
+        try
+        {
+            var response = await Http.GetAsync("health", _cancellationTokenSource.Token);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync(_cancellationTokenSource.Token);
+                var healthResponse = JsonSerializer.Deserialize<HealthResponse>(content, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+                
+                _status = healthResponse?.Status ?? "Unknown";
+            }
+            else
+            {
+                _status = $"Error ({response.StatusCode})";
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            _status = "Timeout";
+        }
+        catch (HttpRequestException)
+        {
+            _status = "Offline";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Health check failed");
+            _status = "Error";
+        }
+        
+        _lastChecked = DateTime.Now.ToString("HH:mm:ss");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetStatusClass()
+    {
+        return _status.ToLower() switch
+        {
+            "healthy" => "status-healthy",
+            "offline" => "status-offline",
+            "error" => "status-error",
+            "timeout" => "status-timeout",
+            _ => "status-unknown"
+        };
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+    }
+
+    private class HealthResponse
+    {
+        public string Status { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+}
+
+<style>
+    .api-health-status {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        margin: 0.5rem;
+    }
+
+    .health-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-healthy .status-dot {
+        background-color: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .status-offline .status-dot {
+        background-color: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+
+    .status-error .status-dot {
+        background-color: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+
+    .status-timeout .status-dot {
+        background-color: #f97316;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+    }
+
+    .status-unknown .status-dot {
+        background-color: #6b7280;
+        box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+    }
+
+    .status-text {
+        color: var(--text-color, #333);
+        font-weight: 500;
+    }
+
+    .last-checked {
+        color: var(--text-muted, #666);
+        margin-top: 0.25rem;
+    }    /* Dark mode support */
+    @@media (prefers-color-scheme: dark) {
+        .status-text {
+            color: var(--text-color, #e5e7eb);
+        }
+        
+        .last-checked {
+            color: var(--text-muted, #9ca3af);
+        }
+    }
+</style>

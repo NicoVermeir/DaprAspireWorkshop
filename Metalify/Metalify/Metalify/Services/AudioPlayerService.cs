@@ -1,9 +1,9 @@
 using Metalify.Client.Models;
-using Metalify.Client.Services.Interfaces;
+using Metalify.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Timers;
 
-namespace Metalify.Client.Services;
+namespace Metalify.Services;
 
 public class AudioPlayerService : IAudioPlayerService, IDisposable
 {

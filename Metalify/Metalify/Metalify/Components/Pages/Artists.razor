@@ -1,8 +1,6 @@
 @page "/artists"
 @page "/artists/{ArtistId:guid}"
 @rendermode InteractiveServer
-@using Metalify.Client.Services.Interfaces
-@using Metalify.Client.Models
 @inject IMusicDataService MusicDataService
 @inject IAudioPlayerService AudioPlayerService
 @inject ILogger<Artists> Logger
