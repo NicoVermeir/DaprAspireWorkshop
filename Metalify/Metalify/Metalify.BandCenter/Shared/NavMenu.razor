@@ -1,0 +1,105 @@
+﻿@using Metalify.BandCenter.Services
+@inject IBandSessionService BandSessionService
+@inject NavigationManager Navigation
+
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <i class="fas fa-guitar me-2"></i>
+            BandCenter
+        </a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        @if (currentBand != null)
+        {
+            <div class="nav-item px-3 mb-3">
+                <div class="text-center py-2 border-bottom border-secondary">
+                    <small class="text-muted">Current Band</small>
+                    <div class="fw-bold text-danger">@currentBand.Name</div>
+                </div>
+            </div>
+        }
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </NavLink>
+        </div>
+        
+        @if (currentBand != null)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="band-info">
+                    <i class="fas fa-info-circle me-2"></i> Band Info
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="albums">
+                    <i class="fas fa-compact-disc me-2"></i> Albums
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="songs">
+                    <i class="fas fa-music me-2"></i> Songs
+                </NavLink>
+            </div>
+            
+            <hr class="border-secondary my-3 mx-3">
+            
+            <div class="nav-item px-3">
+                <button class="nav-link btn btn-link text-start w-100" @onclick="Logout">
+                    <i class="fas fa-sign-out-alt me-2"></i> Switch Band
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="login">
+                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private Metalify.BandCenter.Models.Band? currentBand;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentBand = await BandSessionService.GetCurrentBandAsync();
+        BandSessionService.BandChanged += OnBandChanged;
+    }
+
+    private void OnBandChanged(object? sender, Metalify.BandCenter.Models.Band? band)
+    {
+        currentBand = band;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task Logout()
+    {
+        await BandSessionService.ClearCurrentBandAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        BandSessionService.BandChanged -= OnBandChanged;
+    }
+}

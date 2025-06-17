@@ -1,0 +1,69 @@
+﻿@inherits LayoutComponentBase
+@using Metalify.BandCenter.Services
+@inject IBandSessionService BandSessionService
+
+<PageTitle>Metalify BandCenter</PageTitle>
+
+<div class="page">
+    @if (IsLoginPage)
+    {
+        @Body
+    }
+    else
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <div class="top-row px-4 navbar navbar-dark bg-dark">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <span class="navbar-brand">
+                            <i class="fas fa-guitar me-2"></i>
+                            Metalify BandCenter
+                        </span>
+                    </div>
+                    <div>
+                        @if (currentBand != null)
+                        {
+                            <span class="me-3 text-light">
+                                <i class="fas fa-users me-1"></i>
+                                @currentBand.Name
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    }
+</div>
+
+@code {
+    private Metalify.BandCenter.Models.Band? currentBand;
+    
+    private bool IsLoginPage => NavigationManager.ToBaseRelativePath(NavigationManager.Uri).StartsWith("login");
+    
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsLoginPage)
+        {
+            currentBand = await BandSessionService.GetCurrentBandAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsLoginPage)
+        {
+            currentBand = await BandSessionService.GetCurrentBandAsync();
+            StateHasChanged();
+        }
+    }
+}

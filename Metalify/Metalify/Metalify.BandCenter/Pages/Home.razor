@@ -1,0 +1,187 @@
+@page "/"
+@using Metalify.BandCenter.Models
+@using Metalify.BandCenter.Services
+@inject IBandSessionService BandSessionService
+@inject NavigationManager Navigation
+
+<PageTitle>BandCenter Dashboard - Metalify</PageTitle>
+
+@if (currentBand == null)
+{
+    <div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
+        <div class="text-center">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Checking authentication...</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="mb-1">
+                            <i class="fas fa-tachometer-alt me-2 text-danger"></i>
+                            BandCenter Dashboard
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-users me-1"></i>
+                            Managing: <strong class="text-white">@currentBand.Name</strong>
+                        </p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-light" @onclick="Logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            Switch Band
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-info-circle fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Band Info</h5>
+                        <p class="card-text text-muted">Manage band details and information</p>
+                        <a href="/band-info" class="btn btn-danger">
+                            <i class="fas fa-edit me-2"></i>
+                            Manage
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-compact-disc fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Albums</h5>
+                        <p class="card-text text-muted">Create and manage your discography</p>
+                        <a href="/albums" class="btn btn-danger">
+                            <i class="fas fa-plus me-2"></i>
+                            Manage
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-music fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Songs</h5>
+                        <p class="card-text text-muted">Add and manage your tracks</p>                        <a href="/songs" class="btn btn-danger">
+                            <i class="fas fa-list me-2"></i>
+                            Manage
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Analytics</h5>
+                        <p class="card-text text-muted">View performance metrics</p>
+                        <button class="btn btn-outline-danger" disabled>
+                            <i class="fas fa-clock me-2"></i>
+                            Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Quick Stats -->
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            Quick Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="border-end">
+                                    <h3 class="text-danger mb-0">@albumCount</h3>
+                                    <small class="text-muted">Albums</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border-end">
+                                    <h3 class="text-danger mb-0">@songCount</h3>
+                                    <small class="text-muted">Songs</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="text-danger mb-0">
+                                    @(currentBand.FormedYear.HasValue ? DateTime.Now.Year - currentBand.FormedYear.Value : "?")
+                                </h3>
+                                <small class="text-muted">Years Active</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>
+                            Band Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Genre:</strong> @(currentBand.Genre ?? "Not specified")
+                        </div>
+                        <div class="mb-2">
+                            <strong>Country:</strong> @(currentBand.Country ?? "Not specified")
+                        </div>
+                        <div class="mb-2">
+                            <strong>Formed:</strong> @(currentBand.FormedYear?.ToString() ?? "Unknown")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Band? currentBand;
+    private int albumCount = 0;
+    private int songCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentBand = await BandSessionService.GetCurrentBandAsync();
+        
+        if (currentBand == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Load quick stats (placeholder values for now)
+        // TODO: Implement actual API calls to get counts
+        albumCount = 0;
+        songCount = 0;
+    }
+
+    private async Task Logout()
+    {
+        await BandSessionService.ClearCurrentBandAsync();
+        Navigation.NavigateTo("/login");
+    }
+}

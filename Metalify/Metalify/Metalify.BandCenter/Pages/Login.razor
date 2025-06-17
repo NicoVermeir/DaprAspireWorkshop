@@ -1,0 +1,163 @@
+@page "/login"
+@using Metalify.BandCenter.Models
+@using Metalify.BandCenter.Services
+@inject IBandCenterService BandCenterService
+@inject IBandSessionService BandSessionService
+@inject NavigationManager Navigation
+
+<PageTitle>BandCenter Login - Metalify</PageTitle>
+
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center bg-dark">
+    <div class="card" style="width: 400px;">
+        <div class="card-header text-center">
+            <h3 class="mb-0">
+                <i class="fas fa-guitar me-2"></i>
+                Metalify BandCenter
+            </h3>
+            <p class="text-muted mb-0">Band Administration Portal</p>
+        </div>
+        <div class="card-body">
+            @if (isLoading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading bands...</p>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @errorMessage
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-outline-light" @onclick="LoadBands">
+                        <i class="fas fa-redo me-2"></i>
+                        Retry
+                    </button>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="mb-3">
+                        <label for="bandSelect" class="form-label">
+                            <i class="fas fa-users me-2"></i>
+                            Select Your Band
+                        </label>
+                        <InputSelect id="bandSelect" class="form-select" @bind-Value="loginModel.SelectedBandId">
+                            <option value="">-- Choose a band --</option>
+                            @if (bands != null)
+                            {
+                                @foreach (var band in bands)
+                                {
+                                    <option value="@band.Id">@band.Name</option>
+                                }
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => loginModel.SelectedBandId)" />
+                    </div>
+
+                    @if (bands != null && bands.Any())
+                    {
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Select your band to access the administration dashboard
+                            </small>
+                        </div>
+                    }
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger" disabled="@(string.IsNullOrEmpty(loginModel.SelectedBandId))">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Enter BandCenter
+                        </button>
+                    </div>
+                </EditForm>
+            }
+        </div>
+        <div class="card-footer text-center text-muted">
+            <small>
+                <i class="fas fa-shield-alt me-1"></i>
+                Admin access only
+            </small>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Band>? bands;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private LoginModel loginModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if already logged in
+        var currentBand = await BandSessionService.GetCurrentBandAsync();
+        if (currentBand != null)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadBands();
+    }
+
+    private async Task LoadBands()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            bands = (await BandCenterService.GetAllBandsAsync()).Select(dto => new Band
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Country = dto.Country,
+                Genre = dto.Genre,
+                FormedYear = dto.FormedYear
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load bands: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(loginModel.SelectedBandId) || bands == null)
+                return;
+
+            var selectedBand = bands.FirstOrDefault(b => b.Id.ToString() == loginModel.SelectedBandId);
+            if (selectedBand == null)
+                return;
+
+            await BandSessionService.SetCurrentBandAsync(selectedBand);
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Login failed: {ex.Message}";
+        }
+    }    private class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Please select a band")]
+        public string SelectedBandId { get; set; } = string.Empty;
+    }
+}

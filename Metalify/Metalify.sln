@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metalify.Playlist.Api", "Me
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metalify.Bandcenter.Api", "Metalify\Metalify.Bandcenter.Api\Metalify.Bandcenter.Api.csproj", "{8C21656B-CDC0-3AF5-021A-8C2F8B998C8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metalify.BandCenter", "Metalify\Metalify.BandCenter\Metalify.BandCenter.csproj", "{41058593-4B39-47DA-9DCA-838A25CCECB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,18 @@ Global
 		{8C21656B-CDC0-3AF5-021A-8C2F8B998C8C}.Release|x64.Build.0 = Release|Any CPU
 		{8C21656B-CDC0-3AF5-021A-8C2F8B998C8C}.Release|x86.ActiveCfg = Release|Any CPU
 		{8C21656B-CDC0-3AF5-021A-8C2F8B998C8C}.Release|x86.Build.0 = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|x64.Build.0 = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Debug|x86.Build.0 = Debug|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|x64.ActiveCfg = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|x64.Build.0 = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|x86.ActiveCfg = Release|Any CPU
+		{41058593-4B39-47DA-9DCA-838A25CCECB7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +111,7 @@ Global
 		{9E6F2649-D444-4B05-8A25-AF5998AAC7FE} = {925EF7A6-BD2D-FD16-DA9B-B4A434F89C38}
 		{08FF8DC4-DA4E-4C91-96C2-CA57EA69041E} = {925EF7A6-BD2D-FD16-DA9B-B4A434F89C38}
 		{8C21656B-CDC0-3AF5-021A-8C2F8B998C8C} = {925EF7A6-BD2D-FD16-DA9B-B4A434F89C38}
+		{41058593-4B39-47DA-9DCA-838A25CCECB7} = {6A166452-0661-9F2D-66B3-878B7B8DAE7B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FEB5B2C1-BD7A-424E-99AF-18F43DA7118C}

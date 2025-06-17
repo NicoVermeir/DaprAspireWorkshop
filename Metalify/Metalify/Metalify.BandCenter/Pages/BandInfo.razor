@@ -1,0 +1,277 @@
+@page "/band-info"
+@using Metalify.BandCenter.Models
+@using Metalify.BandCenter.Models.DTOs
+@using Metalify.BandCenter.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject IBandCenterService BandCenterService
+@inject IBandSessionService BandSessionService
+@inject NavigationManager Navigation
+
+<PageTitle>Band Information - Metalify BandCenter</PageTitle>
+
+@if (currentBand == null)
+{
+    <div class="text-center">
+        <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading...</p>
+    </div>
+}
+else
+{
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col">
+                <h1>
+                    <i class="fas fa-info-circle me-2 text-danger"></i>
+                    Band Information
+                </h1>
+                <p class="text-muted">Manage @currentBand.Name details and information</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                @successMessage
+                <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Edit Band Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="bandEditModel" OnValidSubmit="HandleSaveBand">
+                            <DataAnnotationsValidator />
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="bandName" class="form-label">Band Name</label>
+                                    <InputText id="bandName" class="form-control" @bind-Value="bandEditModel.Name" />
+                                    <ValidationMessage For="@(() => bandEditModel.Name)" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="genre" class="form-label">Genre</label>
+                                    <InputText id="genre" class="form-control" @bind-Value="bandEditModel.Genre" placeholder="e.g., Heavy Metal, Death Metal" />
+                                    <ValidationMessage For="@(() => bandEditModel.Genre)" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="country" class="form-label">Country</label>
+                                    <InputText id="country" class="form-control" @bind-Value="bandEditModel.Country" />
+                                    <ValidationMessage For="@(() => bandEditModel.Country)" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="formedYear" class="form-label">Formed Year</label>
+                                    <InputNumber id="formedYear" class="form-control" @bind-Value="bandEditModel.FormedYear" />
+                                    <ValidationMessage For="@(() => bandEditModel.FormedYear)" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="biography" class="form-label">Biography</label>
+                                <InputTextArea id="biography" class="form-control" rows="4" @bind-Value="bandEditModel.Biography" 
+                                             placeholder="Tell the story of your band..." />
+                                <ValidationMessage For="@(() => bandEditModel.Biography)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="websiteUrl" class="form-label">Website URL</label>
+                                <InputText id="websiteUrl" class="form-control" @bind-Value="bandEditModel.WebsiteUrl" 
+                                         placeholder="https://yourband.com" />
+                                <ValidationMessage For="@(() => bandEditModel.WebsiteUrl)" />
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-light" @onclick="ResetForm">
+                                    <i class="fas fa-undo me-2"></i>
+                                    Reset
+                                </button>
+                                <button type="submit" class="btn btn-danger" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-save me-2"></i>
+                                    }
+                                    Save Changes
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Band Statistics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Albums:</span>
+                                <strong class="text-danger">@albumCount</strong>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Songs:</span>
+                                <strong class="text-danger">@songCount</strong>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Years Active:</span>
+                                <strong class="text-danger">
+                                    @(currentBand.FormedYear.HasValue ? DateTime.Now.Year - currentBand.FormedYear.Value : "?")
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools me-2"></i>
+                            Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">                        <div class="d-grid gap-2">
+                            <a href="/albums" class="btn btn-outline-danger">
+                                <i class="fas fa-compact-disc me-2"></i>
+                                Manage Albums
+                            </a>
+                            <a href="/songs" class="btn btn-outline-danger">
+                                <i class="fas fa-music me-2"></i>
+                                Manage Songs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Band? currentBand;
+    private BandUpdateDto bandEditModel = new();
+    private bool isSaving = false;
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private int albumCount = 0;
+    private int songCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentBand = await BandSessionService.GetCurrentBandAsync();
+        
+        if (currentBand == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Initialize the edit model with current band data
+        bandEditModel = new BandUpdateDto
+        {
+            Name = currentBand.Name,
+            Genre = currentBand.Genre,
+            Country = currentBand.Country,
+            FormedYear = currentBand.FormedYear,
+            Biography = currentBand.Biography,
+            WebsiteUrl = currentBand.WebsiteUrl
+        };
+
+        // Load statistics (placeholder for now)
+        // TODO: Implement actual API calls to get counts
+        albumCount = 0;
+        songCount = 0;
+    }
+
+    private async Task HandleSaveBand()
+    {
+        if (currentBand == null) return;        try
+        {
+            isSaving = true;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            var updatedBandDto = await BandCenterService.UpdateBandAsync(currentBand.Id, bandEditModel);
+            
+            if (updatedBandDto != null)
+            {
+                // Update the current session with the updated band data
+                var updatedBand = new Band
+                {
+                    Id = updatedBandDto.Id,
+                    Name = updatedBandDto.Name,
+                    Country = updatedBandDto.Country,
+                    Genre = updatedBandDto.Genre,
+                    FormedYear = updatedBandDto.FormedYear,
+                    Biography = updatedBandDto.Biography,
+                    WebsiteUrl = string.Empty // Add this property if available in DTO
+                };
+                
+                await BandSessionService.SetCurrentBandAsync(updatedBand);
+                currentBand = updatedBand;
+            }
+            
+            successMessage = "Band information updated successfully!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to update band information: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        if (currentBand == null) return;
+
+        bandEditModel = new BandUpdateDto
+        {
+            Name = currentBand.Name,
+            Genre = currentBand.Genre,
+            Country = currentBand.Country,
+            FormedYear = currentBand.FormedYear,
+            Biography = currentBand.Biography,
+            WebsiteUrl = currentBand.WebsiteUrl
+        };
+        
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+    }
+}
