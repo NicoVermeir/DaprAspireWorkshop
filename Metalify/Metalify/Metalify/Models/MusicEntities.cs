@@ -48,5 +48,6 @@ public class Playlist
     public string CreatedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public int SongCount { get; set; }
     public List<Song> Songs { get; set; } = new();
 }

@@ -250,9 +250,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
             logger.LogError(ex, "Error updating playlist {PlaylistId}", playlist.Id);
             return false;
         }
-    }
-
-    // Helper methods to map between DTOs and domain models
+    }    // Helper methods to map between DTOs and domain models
     private static Playlist MapToPlaylist(PlaylistSummaryDto dto)
     {
         return new Playlist
@@ -265,12 +263,12 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
             CreatedBy = dto.CreatedBy,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
+            SongCount = dto.SongCount,
             Songs = new List<Song>() // Summary doesn't include songs
         };
-    }
-
-    private static Playlist MapToPlaylistWithSongs(PlaylistDto dto)
+    }    private static Playlist MapToPlaylistWithSongs(PlaylistDto dto)
     {
+        var songs = dto.Songs?.Select(MapToSong).ToList() ?? new List<Song>();
         return new Playlist
         {
             Id = dto.Id,
@@ -281,7 +279,8 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
             CreatedBy = dto.CreatedBy,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
-            Songs = dto.Songs?.Select(MapToSong).ToList() ?? new List<Song>()
+            SongCount = songs.Count, // Calculate from actual songs list
+            Songs = songs
         };
     }
 
