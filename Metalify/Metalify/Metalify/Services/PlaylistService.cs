@@ -7,7 +7,7 @@ namespace Metalify.Services;
 /// <summary>
 /// HTTP-based playlist service that calls the Metalify.Playlist.Api
 /// </summary>
-public class PlaylistService(HttpClient httpClient, ILogger<PlaylistService> logger) : IPlaylistService
+public class PlaylistService(HttpClient httpClient, ICatalogService catalogService, ILogger<PlaylistService> logger) : IPlaylistService
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -98,9 +98,21 @@ public class PlaylistService(HttpClient httpClient, ILogger<PlaylistService> log
         {
             logger.LogInformation("Adding song {SongId} to playlist {PlaylistId}", songId, playlistId);
             
+            // Fetch song metadata from catalog service
+            var song = await catalogService.GetSongByIdAsync(songId);
+            if (song == null)
+            {
+                logger.LogWarning("Song {SongId} not found in catalog", songId);
+                return false;
+            }
+            
             var addSongDto = new AddSongToPlaylistDto
             {
                 SongId = songId,
+                SongTitle = song.Title,
+                ArtistName = song.ArtistName,
+                AlbumTitle = song.AlbumTitle,
+                Duration = song.Duration,
                 Position = null // Add to end
             };
 
@@ -109,8 +121,8 @@ public class PlaylistService(HttpClient httpClient, ILogger<PlaylistService> log
 
             if (response.IsSuccessStatusCode)
             {
-                logger.LogInformation("Successfully added song {SongId} to playlist {PlaylistId}", 
-                    songId, playlistId);
+                logger.LogInformation("Successfully added song {SongId} ({SongTitle}) to playlist {PlaylistId}", 
+                    songId, song.Title, playlistId);
                 return true;
             }
             else

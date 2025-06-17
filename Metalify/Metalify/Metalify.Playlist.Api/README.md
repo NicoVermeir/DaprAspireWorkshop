@@ -4,25 +4,24 @@ A microservice API for managing playlists in the Metalify heavy metal music cata
 
 ## Features
 
-- **Microservice Architecture**: Independent playlist management service that communicates with the main catalog API
+- **Independent Microservice Architecture**: Self-contained playlist management service that doesn't depend on external services for core functionality
+- **Data Denormalization**: Stores song metadata locally for better performance and service independence
 - **Entity Framework Core**: Data access with in-memory database for development, SQL Server for production
 - **REST Best Practices**: RESTful endpoints following HTTP conventions
 - **OpenAPI/Swagger**: Interactive API documentation
 - **Health Checks**: Built-in health monitoring endpoints
 - **CORS Support**: Configured for cross-origin requests
-- **External API Integration**: Calls the main catalog API to fetch song details
+- **Microservices Best Practices**: Follows proper service boundaries and data ownership patterns
 
 ## Architecture
 
-```
+```text
 Extensions/          # API endpoint mappings
 ├── PlaylistEndpoints.cs
 
 Services/            # Business logic layer
 ├── IPlaylistService.cs
-├── PlaylistService.cs
-├── ICatalogApiService.cs
-└── CatalogApiService.cs
+└── PlaylistService.cs
 
 Repositories/        # Data access layer
 ├── IPlaylistRepository.cs
@@ -30,7 +29,7 @@ Repositories/        # Data access layer
 
 Models/              # Domain entities
 ├── Playlist.cs
-├── PlaylistItem.cs
+├── PlaylistItem.cs (with denormalized song metadata)
 └── SongReference.cs
 
 DTOs/               # Data transfer objects
@@ -64,7 +63,6 @@ Data/               # Entity Framework context
 
 ### Prerequisites
 - .NET 9.0 SDK
-- The main Metalify Catalog API running (for song data)
 
 ### Running the API
 
@@ -90,15 +88,8 @@ The API uses Entity Framework Core with:
 - **Development**: In-memory database for quick testing
 - **Production**: SQL Server (configure connection string in appsettings.json)
 
-### Catalog API Integration
-Configure the main catalog API URL in `appsettings.json`:
-```json
-{
-  "CatalogApi": {
-    "BaseUrl": "https://localhost:7001"
-  }
-}
-```
+### Service Independence
+This microservice operates independently and does not require external service dependencies. Song metadata is provided by the calling application when songs are added to playlists.
 
 ## Sample Data
 
@@ -133,14 +124,17 @@ Structured logging is configured with different levels:
 - **Error**: Error conditions
 - **Debug**: Detailed debugging information (Development only)
 
-## Microservice Communication
+## Microservice Architecture
 
-This service communicates with the main catalog API to:
-- Validate song existence when adding to playlists
-- Fetch song details for playlist display
-- Maintain data consistency across services
+This service follows microservices best practices by:
 
-The service is designed to be resilient and will handle catalog API failures gracefully.
+- **Service Independence**: Operates without external service dependencies for core functionality
+- **Data Ownership**: Stores denormalized song metadata locally for better performance
+- **Fault Tolerance**: Continues to function even if other services are unavailable
+- **Proper Boundaries**: Clear separation of concerns with other services
+- **Eventual Consistency**: Accepts song metadata at playlist creation time
+
+The service receives song metadata from the main application when songs are added to playlists, eliminating the need for cross-service calls during normal operations.
 
 ## Development
 

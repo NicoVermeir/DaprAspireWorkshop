@@ -15,7 +15,8 @@ public interface IPlaylistRepository
     Task<Models.Playlist> CreateAsync(Models.Playlist playlist);
     Task<Models.Playlist?> UpdateAsync(Guid id, Models.Playlist playlist);
     Task<bool> DeleteAsync(Guid id);
-    Task<PlaylistItem> AddSongToPlaylistAsync(Guid playlistId, Guid songId, int? position = null);
+    Task<PlaylistItem> AddSongToPlaylistAsync(Guid playlistId, Guid songId, int? position = null, 
+        string songTitle = "", string artistName = "", string albumTitle = "", TimeSpan duration = default);
     Task<bool> RemoveSongFromPlaylistAsync(Guid playlistId, Guid songId);
     Task<bool> UpdatePlaylistItemPositionAsync(Guid itemId, int newPosition);
     Task<bool> ReorderPlaylistAsync(Guid playlistId, List<(Guid itemId, int position)> newOrder);

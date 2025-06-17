@@ -28,16 +28,13 @@ public interface IPlaylistService
 public class PlaylistService : IPlaylistService
 {
     private readonly IPlaylistRepository _playlistRepository;
-    private readonly ICatalogApiService _catalogApiService;
     private readonly ILogger<PlaylistService> _logger;
 
     public PlaylistService(
         IPlaylistRepository playlistRepository,
-        ICatalogApiService catalogApiService,
         ILogger<PlaylistService> logger)
     {
         _playlistRepository = playlistRepository ?? throw new ArgumentNullException(nameof(playlistRepository));
-        _catalogApiService = catalogApiService ?? throw new ArgumentNullException(nameof(catalogApiService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -123,20 +120,21 @@ public class PlaylistService : IPlaylistService
     {
         _logger.LogInformation("Deleting playlist: {PlaylistId}", id);
         return await _playlistRepository.DeleteAsync(id);
-    }
-
-    public async Task<PlaylistDto?> AddSongToPlaylistAsync(Guid playlistId, AddSongToPlaylistDto addSongDto)
+    }    public async Task<PlaylistDto?> AddSongToPlaylistAsync(Guid playlistId, AddSongToPlaylistDto addSongDto)
     {
         _logger.LogInformation("Adding song {SongId} to playlist {PlaylistId}", addSongDto.SongId, playlistId);
         
-        // Verify song exists in catalog
-        var song = await _catalogApiService.GetSongByIdAsync(addSongDto.SongId);
-        if (song == null)
-        {
-            throw new ArgumentException($"Song with ID {addSongDto.SongId} not found in catalog");
-        }
-
-        await _playlistRepository.AddSongToPlaylistAsync(playlistId, addSongDto.SongId, addSongDto.Position);
+        // No need to verify song exists in catalog - we accept the provided metadata
+        // This follows the microservices principle of service independence
+        
+        await _playlistRepository.AddSongToPlaylistAsync(
+            playlistId, 
+            addSongDto.SongId, 
+            addSongDto.Position,
+            addSongDto.SongTitle,
+            addSongDto.ArtistName,
+            addSongDto.AlbumTitle,
+            addSongDto.Duration);
         
         // Return updated playlist
         var updatedPlaylist = await _playlistRepository.GetByIdAsync(playlistId);
@@ -181,35 +179,25 @@ public class PlaylistService : IPlaylistService
             SongCount = playlist.PlaylistItems.Count,
             TotalDuration = TimeSpan.Zero // Will be calculated when we have song details
         };
-    }
-
-    private async Task<PlaylistDto> MapToDetailedDto(Models.Playlist playlist)
+    }    private async Task<PlaylistDto> MapToDetailedDto(Models.Playlist playlist)
     {
         var playlistItems = new List<PlaylistItemDto>();
         
         if (playlist.PlaylistItems.Any())
         {
-            // Get song details from catalog API
-            var songIds = playlist.PlaylistItems.Select(pi => pi.SongId).ToList();
-            var songs = await _catalogApiService.GetSongsByIdsAsync(songIds);
-            var songDict = songs.ToDictionary(s => s.Id);
-
+            // Use denormalized data - no need to call external service
             playlistItems = playlist.PlaylistItems
                 .OrderBy(pi => pi.Position)
-                .Select(pi =>
+                .Select(pi => new PlaylistItemDto
                 {
-                    var song = songDict.GetValueOrDefault(pi.SongId);
-                    return new PlaylistItemDto
-                    {
-                        Id = pi.Id,
-                        SongId = pi.SongId,
-                        SongTitle = song?.Title ?? "Unknown Song",
-                        ArtistName = song?.ArtistName ?? "Unknown Artist",
-                        AlbumTitle = song?.AlbumTitle ?? "Unknown Album",
-                        Duration = song?.Duration ?? TimeSpan.Zero,
-                        Position = pi.Position,
-                        AddedAt = pi.AddedAt
-                    };
+                    Id = pi.Id,
+                    SongId = pi.SongId,
+                    SongTitle = pi.SongTitle,
+                    ArtistName = pi.ArtistName,
+                    AlbumTitle = pi.AlbumTitle,
+                    Duration = pi.Duration,
+                    Position = pi.Position,
+                    AddedAt = pi.AddedAt
                 })
                 .ToList();
         }

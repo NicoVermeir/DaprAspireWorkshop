@@ -79,6 +79,10 @@ public class PlaylistItemDto
 public class AddSongToPlaylistDto
 {
     public Guid SongId { get; set; }
+    public string SongTitle { get; set; } = string.Empty;
+    public string ArtistName { get; set; } = string.Empty;
+    public string AlbumTitle { get; set; } = string.Empty;
+    public TimeSpan Duration { get; set; }
     public int? Position { get; set; } // If null, add to end
 }
 

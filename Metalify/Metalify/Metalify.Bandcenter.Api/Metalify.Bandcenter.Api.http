@@ -1,0 +1,6 @@
+@Metalify.Bandcenter.Api_HostAddress = http://localhost:5066
+
+GET {{Metalify.Bandcenter.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

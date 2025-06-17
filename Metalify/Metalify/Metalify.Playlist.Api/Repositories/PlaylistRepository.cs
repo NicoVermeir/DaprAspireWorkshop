@@ -183,13 +183,12 @@ public class PlaylistRepository : IPlaylistRepository
             _logger.LogError(ex, "Error deleting playlist: {PlaylistId}", id);
             throw;
         }
-    }
-
-    public async Task<PlaylistItem> AddSongToPlaylistAsync(Guid playlistId, Guid songId, int? position = null)
+    }    public async Task<PlaylistItem> AddSongToPlaylistAsync(Guid playlistId, Guid songId, int? position = null, 
+        string songTitle = "", string artistName = "", string albumTitle = "", TimeSpan duration = default)
     {
         try
         {
-            _logger.LogInformation("Adding song {SongId} to playlist {PlaylistId}", songId, playlistId);
+            _logger.LogInformation("Adding song {SongId} ({SongTitle}) to playlist {PlaylistId}", songId, songTitle, playlistId);
             
             var playlist = await _context.Playlists
                 .Include(p => p.PlaylistItems)
@@ -228,6 +227,10 @@ public class PlaylistRepository : IPlaylistRepository
                 Id = Guid.NewGuid(),
                 PlaylistId = playlistId,
                 SongId = songId,
+                SongTitle = songTitle,
+                ArtistName = artistName,
+                AlbumTitle = albumTitle,
+                Duration = duration,
                 Position = itemPosition,
                 AddedAt = DateTime.UtcNow
             };
@@ -237,8 +240,8 @@ public class PlaylistRepository : IPlaylistRepository
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Successfully added song {SongId} to playlist {PlaylistId} at position {Position}", 
-                songId, playlistId, itemPosition);
+            _logger.LogInformation("Successfully added song {SongId} ({SongTitle}) to playlist {PlaylistId} at position {Position}", 
+                songId, songTitle, playlistId, itemPosition);
             return playlistItem;
         }
         catch (Exception ex)
