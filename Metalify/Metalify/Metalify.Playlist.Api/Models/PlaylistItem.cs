@@ -35,14 +35,18 @@ public class PlaylistItem
     /// </summary>
     [Required]
     [MaxLength(200)]
-    public string ArtistName { get; set; } = string.Empty;
-
-    /// <summary>
+    public string ArtistName { get; set; } = string.Empty;    /// <summary>
     /// Denormalized album title for better performance and independence
     /// </summary>
     [Required]
     [MaxLength(200)]
     public string AlbumTitle { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Denormalized album cover image URL for better performance and independence
+    /// </summary>
+    [MaxLength(500)]
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Denormalized song duration for better performance and independence

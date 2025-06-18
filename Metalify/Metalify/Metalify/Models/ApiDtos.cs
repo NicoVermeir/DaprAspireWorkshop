@@ -54,6 +54,7 @@ public class SongDto
     public TimeSpan Duration { get; set; }
     public Guid AlbumId { get; set; }
     public string AlbumTitle { get; set; } = string.Empty;
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public Guid ArtistId { get; set; }
     public string ArtistName { get; set; } = string.Empty;
     public string AudioUrl { get; set; } = string.Empty;
@@ -105,6 +106,7 @@ public class PlaylistItemDto
     public string SongTitle { get; set; } = string.Empty;
     public string ArtistName { get; set; } = string.Empty;
     public string AlbumTitle { get; set; } = string.Empty;
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
     public int Position { get; set; }
     public DateTime AddedAt { get; set; }
@@ -116,6 +118,7 @@ public class AddSongToPlaylistDto
     public string SongTitle { get; set; } = string.Empty;
     public string ArtistName { get; set; } = string.Empty;
     public string AlbumTitle { get; set; } = string.Empty;
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
     public int? Position { get; set; } // If null, add to end
 }

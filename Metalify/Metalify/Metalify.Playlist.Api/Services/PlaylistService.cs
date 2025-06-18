@@ -126,14 +126,14 @@ public class PlaylistService : IPlaylistService
         
         // No need to verify song exists in catalog - we accept the provided metadata
         // This follows the microservices principle of service independence
-        
-        await _playlistRepository.AddSongToPlaylistAsync(
+          await _playlistRepository.AddSongToPlaylistAsync(
             playlistId, 
             addSongDto.SongId, 
             addSongDto.Position,
             addSongDto.SongTitle,
             addSongDto.ArtistName,
             addSongDto.AlbumTitle,
+            addSongDto.AlbumCoverImageUrl,
             addSongDto.Duration);
         
         // Return updated playlist
@@ -184,8 +184,7 @@ public class PlaylistService : IPlaylistService
         var playlistItems = new List<PlaylistItemDto>();
         
         if (playlist.PlaylistItems.Any())
-        {
-            // Use denormalized data - no need to call external service
+        {            // Use denormalized data - no need to call external service
             playlistItems = playlist.PlaylistItems
                 .OrderBy(pi => pi.Position)
                 .Select(pi => new PlaylistItemDto
@@ -195,6 +194,7 @@ public class PlaylistService : IPlaylistService
                     SongTitle = pi.SongTitle,
                     ArtistName = pi.ArtistName,
                     AlbumTitle = pi.AlbumTitle,
+                    AlbumCoverImageUrl = pi.AlbumCoverImageUrl,
                     Duration = pi.Duration,
                     Position = pi.Position,
                     AddedAt = pi.AddedAt

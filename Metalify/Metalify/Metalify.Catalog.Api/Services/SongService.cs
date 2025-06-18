@@ -51,9 +51,7 @@ public class SongService : ISongService
         _logger.LogInformation("Searching songs with term: {SearchTerm}", searchTerm);
         var songs = await _songRepository.SearchByTitleAsync(searchTerm);
         return songs.Select(MapToDto);
-    }
-
-    private static SongDto MapToDto(Song song)
+    }    private static SongDto MapToDto(Song song)
     {
         return new SongDto
         {
@@ -63,6 +61,7 @@ public class SongService : ISongService
             Duration = song.Duration,
             AlbumId = song.AlbumId,
             AlbumTitle = song.Album.Title,
+            AlbumCoverImageUrl = song.Album.CoverImageUrl,
             ArtistId = song.ArtistId,
             ArtistName = song.Artist.Name,
             AudioUrl = song.AudioUrl

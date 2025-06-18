@@ -33,6 +33,7 @@ public class Song
     public TimeSpan Duration { get; set; }
     public Guid AlbumId { get; set; }
     public string AlbumTitle { get; set; } = string.Empty;
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public Guid ArtistId { get; set; }
     public string ArtistName { get; set; } = string.Empty;
     public string AudioUrl { get; set; } = string.Empty;

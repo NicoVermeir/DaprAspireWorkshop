@@ -68,6 +68,10 @@ public class PlaylistItemDto
     public string SongTitle { get; set; } = string.Empty;
     public string ArtistName { get; set; } = string.Empty;
     public string AlbumTitle { get; set; } = string.Empty;
+    /// <summary>
+    /// URL of the album cover image
+    /// </summary>
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
     public int Position { get; set; }
     public DateTime AddedAt { get; set; }
@@ -82,6 +86,10 @@ public class AddSongToPlaylistDto
     public string SongTitle { get; set; } = string.Empty;
     public string ArtistName { get; set; } = string.Empty;
     public string AlbumTitle { get; set; } = string.Empty;
+    /// <summary>
+    /// URL of the album cover image
+    /// </summary>
+    public string AlbumCoverImageUrl { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
     public int? Position { get; set; } // If null, add to end
 }

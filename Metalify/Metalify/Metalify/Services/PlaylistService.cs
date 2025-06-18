@@ -105,13 +105,13 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
                 logger.LogWarning("Song {SongId} not found in catalog", songId);
                 return false;
             }
-            
-            var addSongDto = new AddSongToPlaylistDto
+              var addSongDto = new AddSongToPlaylistDto
             {
                 SongId = songId,
                 SongTitle = song.Title,
                 ArtistName = song.ArtistName,
                 AlbumTitle = song.AlbumTitle,
+                AlbumCoverImageUrl = song.AlbumCoverImageUrl,
                 Duration = song.Duration,
                 Position = null // Add to end
             };
@@ -282,9 +282,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
             SongCount = songs.Count, // Calculate from actual songs list
             Songs = songs
         };
-    }
-
-    private static Song MapToSong(PlaylistItemDto dto)
+    }    private static Song MapToSong(PlaylistItemDto dto)
     {
         return new Song
         {
@@ -292,6 +290,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
             Title = dto.SongTitle,
             Duration = dto.Duration,
             AlbumTitle = dto.AlbumTitle,
+            AlbumCoverImageUrl = dto.AlbumCoverImageUrl,
             ArtistName = dto.ArtistName,
             // Note: Some properties may not be available in playlist context
             TrackNumber = 0, // Not available in playlist context

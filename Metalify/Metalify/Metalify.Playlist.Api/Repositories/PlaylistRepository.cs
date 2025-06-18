@@ -184,7 +184,7 @@ public class PlaylistRepository : IPlaylistRepository
             throw;
         }
     }    public async Task<PlaylistItem> AddSongToPlaylistAsync(Guid playlistId, Guid songId, int? position = null, 
-        string songTitle = "", string artistName = "", string albumTitle = "", TimeSpan duration = default)
+        string songTitle = "", string artistName = "", string albumTitle = "", string albumCoverImageUrl = "", TimeSpan duration = default)
     {
         try
         {
@@ -220,9 +220,7 @@ public class PlaylistRepository : IPlaylistRepository
                 {
                     item.Position++;
                 }
-            }
-
-            var playlistItem = new PlaylistItem
+            }            var playlistItem = new PlaylistItem
             {
                 Id = Guid.NewGuid(),
                 PlaylistId = playlistId,
@@ -230,6 +228,7 @@ public class PlaylistRepository : IPlaylistRepository
                 SongTitle = songTitle,
                 ArtistName = artistName,
                 AlbumTitle = albumTitle,
+                AlbumCoverImageUrl = albumCoverImageUrl,
                 Duration = duration,
                 Position = itemPosition,
                 AddedAt = DateTime.UtcNow
