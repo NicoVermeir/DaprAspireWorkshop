@@ -17,14 +17,14 @@ public class SongRepository : ISongRepository
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
+            .ThenInclude(a => a.Artist)
             .OrderBy(s => s.Title)
             .ToListAsync();
     }    public async Task<Song?> GetByIdAsync(Guid id)
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
+            .ThenInclude(a => a.Artist)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -32,7 +32,7 @@ public class SongRepository : ISongRepository
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
+            .ThenInclude(a => a.Artist)
             .Where(s => s.AlbumId == albumId)
             .OrderBy(s => s.TrackNumber)
             .ThenBy(s => s.Title)
@@ -41,8 +41,8 @@ public class SongRepository : ISongRepository
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
-            .Where(s => s.BandId == bandId)
+            .ThenInclude(a => a.Artist)
+            .Where(s => s.ArtistId == bandId)
             .OrderBy(s => s.Album.ReleaseYear)
             .ThenBy(s => s.TrackNumber)
             .ToListAsync();
@@ -50,7 +50,7 @@ public class SongRepository : ISongRepository
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
+            .ThenInclude(a => a.Artist)
             .Where(s => s.Title.ToLower().Contains(searchTerm.ToLower()))
             .OrderBy(s => s.Title)
             .ToListAsync();
@@ -60,7 +60,7 @@ public class SongRepository : ISongRepository
     {
         return await _context.Songs
             .Include(s => s.Album)
-            .ThenInclude(a => a.Band)
+            .ThenInclude(a => a.Artist)
             .Where(s => s.Duration >= minDuration && s.Duration <= maxDuration)
             .OrderBy(s => s.Duration)
             .ToListAsync();

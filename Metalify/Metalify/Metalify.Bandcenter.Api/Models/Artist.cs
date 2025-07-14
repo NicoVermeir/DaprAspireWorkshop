@@ -5,7 +5,7 @@ namespace Metalify.Bandcenter.Api.Models;
 /// <summary>
 /// Represents a metal band entity
 /// </summary>
-public class Band
+public class Artist
 {
     /// <summary>
     /// Unique identifier for the band
@@ -46,11 +46,11 @@ public class Band
     public int FormedYear { get; set; }
 
     /// <summary>
-    /// Primary metal genre
+    /// Primary metal genres
     /// </summary>
     [Required]
     [MaxLength(100)]
-    public string Genre { get; set; } = string.Empty;
+    public string Genres { get; set; } = string.Empty;
 
     /// <summary>
     /// Lyrical themes
@@ -80,7 +80,7 @@ public class Band
     /// Band photo image URL
     /// </summary>
     [MaxLength(500)]
-    public string PhotoUrl { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Band biography or description
@@ -102,4 +102,9 @@ public class Band
     /// Albums released by this band
     /// </summary>
     public virtual ICollection<Album> Albums { get; set; } = new List<Album>();
+
+    /// <summary>
+    /// Biography of the band
+    /// </summary>
+    public string Bio { get; set; }
 }

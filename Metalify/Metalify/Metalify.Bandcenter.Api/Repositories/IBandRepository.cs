@@ -4,15 +4,15 @@ namespace Metalify.Bandcenter.Api.Repositories;
 
 public interface IBandRepository
 {
-    Task<IEnumerable<Band>> GetAllAsync();
-    Task<Band?> GetByIdAsync(Guid id);
-    Task<Band?> GetByIdWithAlbumsAsync(Guid id);
-    Task<Band?> GetByNameAsync(string name);
-    Task<IEnumerable<Band>> SearchByNameAsync(string searchTerm);
-    Task<IEnumerable<Band>> GetByGenreAsync(string genre);
-    Task<IEnumerable<Band>> GetByCountryAsync(string country);
-    Task<Band> AddAsync(Band band);
-    Task<Band> UpdateAsync(Band band);
+    Task<IEnumerable<Artist>> GetAllAsync();
+    Task<Artist?> GetByIdAsync(Guid id);
+    Task<Artist?> GetByIdWithAlbumsAsync(Guid id);
+    Task<Artist?> GetByNameAsync(string name);
+    Task<IEnumerable<Artist>> SearchByNameAsync(string searchTerm);
+    Task<IEnumerable<Artist>> GetByGenreAsync(string genre);
+    Task<IEnumerable<Artist>> GetByCountryAsync(string country);
+    Task<Artist> AddAsync(Artist band);
+    Task<Artist> UpdateAsync(Artist band);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
 }

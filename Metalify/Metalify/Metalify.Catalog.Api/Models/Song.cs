@@ -19,6 +19,10 @@ public class Song
 
     public TimeSpan Duration { get; set; }
 
+    public string Lyrics { get; set; } = string.Empty;
+
+    public string Notes { get; set; } = string.Empty;
+
     [Required]
     public Guid AlbumId { get; set; }
 

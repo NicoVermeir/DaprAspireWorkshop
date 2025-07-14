@@ -51,7 +51,7 @@ public class Song
     /// ID of the band that performed this song
     /// </summary>
     [Required]
-    public Guid BandId { get; set; }
+    public Guid ArtistId { get; set; }
 
     /// <summary>
     /// When the song record was created
@@ -73,6 +73,6 @@ public class Song
     /// <summary>
     /// The band that performed this song
     /// </summary>
-    [ForeignKey(nameof(BandId))]
-    public virtual Band Band { get; set; } = null!;
+    [ForeignKey(nameof(ArtistId))]
+    public virtual Artist Artist { get; set; } = null!;
 }

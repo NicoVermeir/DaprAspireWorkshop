@@ -25,12 +25,18 @@ public class MetalifyCatalogDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.ImageUrl).HasMaxLength(500);
-            entity.Property(e => e.Bio).HasMaxLength(2000);
-            entity.Property(e => e.Country).HasMaxLength(100);
-            entity.Property(e => e.Genres).HasMaxLength(500);
+            entity.Property(e => e.Country).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Genre).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Themes).HasMaxLength(500);
+            entity.Property(e => e.Label).HasMaxLength(200);
+            entity.Property(e => e.YearsActive).HasMaxLength(100);
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+            entity.Property(e => e.PhotoUrl).HasMaxLength(500);
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.Country);
+            entity.HasIndex(e => e.Genre);
         });
 
         // Album configuration
@@ -38,15 +44,20 @@ public class MetalifyCatalogDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.AlbumType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.CoverImageUrl).HasMaxLength(500);
+            entity.Property(e => e.Label).HasMaxLength(200);
+            entity.Property(e => e.CatalogNumber).HasMaxLength(100);
+            entity.Property(e => e.Format).HasMaxLength(100);
             entity.HasIndex(e => e.Title);
             entity.HasIndex(e => e.ReleaseYear);
-            
+            entity.HasIndex(e => e.AlbumType);
+
             // Foreign key relationship
             entity.HasOne(a => a.Artist)
-                  .WithMany(ar => ar.Albums)
-                  .HasForeignKey(a => a.ArtistId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(ar => ar.Albums)
+                .HasForeignKey(a => a.ArtistId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Song configuration
@@ -57,17 +68,17 @@ public class MetalifyCatalogDbContext : DbContext
             entity.Property(e => e.AudioUrl).HasMaxLength(500);
             entity.HasIndex(e => e.Title);
             entity.HasIndex(e => e.TrackNumber);
-            
+
             // Foreign key relationships
             entity.HasOne(s => s.Album)
-                  .WithMany(a => a.Songs)
-                  .HasForeignKey(s => s.AlbumId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(a => a.Songs)
+                .HasForeignKey(s => s.AlbumId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(s => s.Artist)
-                  .WithMany()
-                  .HasForeignKey(s => s.ArtistId)
-                  .OnDelete(DeleteBehavior.NoAction); // Prevent multiple cascade paths
+                .WithMany()
+                .HasForeignKey(s => s.ArtistId)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent multiple cascade paths
         });
 
         // Seed data
@@ -78,18 +89,21 @@ public class MetalifyCatalogDbContext : DbContext
     {
         // Seed Artists with real metal bands from Metal Archives inspiration
         var artists = new[]
-        {            new Artist
+        {
+            new Artist
             {
                 Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
                 Name = "Iron Maiden",
                 ImageUrl = "https://www.metal-archives.com/images/1/6/4/164_photo.jpg?5628",
-                Bio = "British heavy metal band formed in London in 1975 by bassist and primary songwriter Steve Harris.",
+                Bio =
+                    "British heavy metal band formed in London in 1975 by bassist and primary songwriter Steve Harris.",
                 Country = "United Kingdom",
                 FormedYear = 1975,
                 Genres = "Heavy Metal,NWOBHM",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Artist
+            },
+            new Artist
             {
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 Name = "Metallica",
@@ -100,7 +114,8 @@ public class MetalifyCatalogDbContext : DbContext
                 Genres = "Heavy Metal,Thrash Metal",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Artist
+            },
+            new Artist
             {
                 Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
                 Name = "Black Sabbath",
@@ -111,7 +126,8 @@ public class MetalifyCatalogDbContext : DbContext
                 Genres = "Heavy Metal,Doom Metal",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Artist
+            },
+            new Artist
             {
                 Id = Guid.Parse("44444444-4444-4444-4444-444444444444"),
                 Name = "Judas Priest",
@@ -122,7 +138,8 @@ public class MetalifyCatalogDbContext : DbContext
                 Genres = "Heavy Metal,Speed Metal",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Artist
+            },
+            new Artist
             {
                 Id = Guid.Parse("55555555-5555-5555-5555-555555555555"),
                 Name = "Megadeth",
@@ -139,7 +156,8 @@ public class MetalifyCatalogDbContext : DbContext
                 Id = Guid.Parse("66666666-6666-6666-6666-666666666666"),
                 Name = "Slayer",
                 ImageUrl = "https://www.metal-archives.com/images/7/2/72_photo.jpg",
-                Bio = "American thrash metal band formed in Huntington Park, California in 1981 by guitarists Kerry King and Jeff Hanneman.",
+                Bio =
+                    "American thrash metal band formed in Huntington Park, California in 1981 by guitarists Kerry King and Jeff Hanneman.",
                 Country = "United States",
                 FormedYear = 1981,
                 Genres = "Thrash Metal,Speed Metal",
@@ -152,7 +170,8 @@ public class MetalifyCatalogDbContext : DbContext
 
         // Seed Albums
         var albums = new[]
-        {            // Iron Maiden Albums
+        {
+            // Iron Maiden Albums
             new Album
             {
                 Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
@@ -162,7 +181,8 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Album
+            },
+            new Album
             {
                 Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
                 Title = "Powerslave",
@@ -171,7 +191,7 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },// Metallica Albums
+            }, // Metallica Albums
             new Album
             {
                 Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
@@ -181,7 +201,8 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Album
+            },
+            new Album
             {
                 Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"),
                 Title = "Ride the Lightning",
@@ -190,7 +211,7 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            // Black Sabbath Album
+            }, // Black Sabbath Album
             new Album
             {
                 Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
@@ -211,7 +232,8 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("66666666-6666-6666-6666-666666666666"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Album
+            },
+            new Album
             {
                 Id = Guid.Parse("77777777-7777-7777-7777-777777777777"),
                 Title = "Seasons in the Abyss",
@@ -220,7 +242,8 @@ public class MetalifyCatalogDbContext : DbContext
                 ArtistId = Guid.Parse("66666666-6666-6666-6666-666666666666"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Album
+            },
+            new Album
             {
                 Id = Guid.Parse("88888888-8888-8888-8888-888888888888"),
                 Title = "South of Heaven",
@@ -299,7 +322,8 @@ public class MetalifyCatalogDbContext : DbContext
                 AudioUrl = "https://audio.metalify.com/black-sabbath/paranoid.mp3",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Song
+            },
+            new Song
             {
                 Id = Guid.Parse("33333333-eeee-eeee-eeee-333333333332"),
                 Title = "Iron Man",
@@ -335,7 +359,8 @@ public class MetalifyCatalogDbContext : DbContext
                 AudioUrl = "https://audio.metalify.com/slayer/raining-blood.mp3",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Song
+            },
+            new Song
             {
                 Id = Guid.Parse("66666666-7777-7777-7777-666666666663"),
                 Title = "Seasons in the Abyss",
@@ -346,7 +371,8 @@ public class MetalifyCatalogDbContext : DbContext
                 AudioUrl = "https://audio.metalify.com/slayer/seasons-in-the-abyss.mp3",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            },            new Song
+            },
+            new Song
             {
                 Id = Guid.Parse("66666666-8888-8888-8888-666666666664"),
                 Title = "South of Heaven",

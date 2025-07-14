@@ -69,7 +69,7 @@ public class SongService : ISongService
             Lyrics = createSongDto.Lyrics,
             Notes = createSongDto.Notes,
             AlbumId = createSongDto.AlbumId,
-            BandId = createSongDto.BandId,
+            ArtistId = createSongDto.BandId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -116,8 +116,8 @@ public class SongService : ISongService
         Notes = song.Notes,
         AlbumId = song.AlbumId,
         AlbumTitle = song.Album?.Title ?? string.Empty,
-        BandId = song.BandId,
-        BandName = song.Album?.Band?.Name ?? string.Empty
+        BandId = song.ArtistId,
+        BandName = song.Album?.Artist?.Name ?? string.Empty
     };
 
     private static SongSummaryDto MapToSongSummaryDto(Song song) => new()
@@ -127,6 +127,6 @@ public class SongService : ISongService
         TrackNumber = song.TrackNumber,
         Duration = song.Duration,
         AlbumTitle = song.Album?.Title ?? string.Empty,
-        BandName = song.Album?.Band?.Name ?? string.Empty
+        BandName = song.Album?.Artist?.Name ?? string.Empty
     };
 }

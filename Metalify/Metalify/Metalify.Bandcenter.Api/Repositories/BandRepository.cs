@@ -13,18 +13,18 @@ public class BandRepository : IBandRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Band>> GetAllAsync()
+    public async Task<IEnumerable<Artist>> GetAllAsync()
     {
         return await _context.Bands
             .OrderBy(b => b.Name)
             .ToListAsync();
-    }    public async Task<Band?> GetByIdAsync(Guid id)
+    }    public async Task<Artist?> GetByIdAsync(Guid id)
     {
         return await _context.Bands
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
-    public async Task<Band?> GetByIdWithAlbumsAsync(Guid id)
+    public async Task<Artist?> GetByIdWithAlbumsAsync(Guid id)
     {
         return await _context.Bands
             .Include(b => b.Albums)
@@ -32,13 +32,13 @@ public class BandRepository : IBandRepository
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
-    public async Task<Band?> GetByNameAsync(string name)
+    public async Task<Artist?> GetByNameAsync(string name)
     {
         return await _context.Bands
             .FirstOrDefaultAsync(b => b.Name.ToLower() == name.ToLower());
     }
 
-    public async Task<IEnumerable<Band>> SearchByNameAsync(string searchTerm)
+    public async Task<IEnumerable<Artist>> SearchByNameAsync(string searchTerm)
     {
         return await _context.Bands
             .Where(b => b.Name.ToLower().Contains(searchTerm.ToLower()))
@@ -46,15 +46,15 @@ public class BandRepository : IBandRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Band>> GetByGenreAsync(string genre)
+    public async Task<IEnumerable<Artist>> GetByGenreAsync(string genre)
     {
         return await _context.Bands
-            .Where(b => b.Genre.ToLower().Contains(genre.ToLower()))
+            .Where(b => b.Genres.ToLower().Contains(genre.ToLower()))
             .OrderBy(b => b.Name)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Band>> GetByCountryAsync(string country)
+    public async Task<IEnumerable<Artist>> GetByCountryAsync(string country)
     {
         return await _context.Bands
             .Where(b => b.Country.ToLower() == country.ToLower())
@@ -62,14 +62,14 @@ public class BandRepository : IBandRepository
             .ToListAsync();
     }
 
-    public async Task<Band> AddAsync(Band band)
+    public async Task<Artist> AddAsync(Artist band)
     {
         _context.Bands.Add(band);
         await _context.SaveChangesAsync();
         return band;
     }
 
-    public async Task<Band> UpdateAsync(Band band)
+    public async Task<Artist> UpdateAsync(Artist band)
     {
         _context.Entry(band).State = EntityState.Modified;
         await _context.SaveChangesAsync();

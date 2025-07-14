@@ -51,7 +51,7 @@ public class BandService : IBandService
 
     public async Task<BandDto> CreateBandAsync(CreateBandDto createBandDto)
     {
-        var band = new Band
+        var band = new Artist
         {
             Id = Guid.NewGuid(),
             Name = createBandDto.Name,
@@ -59,12 +59,12 @@ public class BandService : IBandService
             Location = createBandDto.Location,
             Status = createBandDto.Status,
             FormedYear = createBandDto.FormedYear,
-            Genre = createBandDto.Genre,
+            Genres = createBandDto.Genre,
             Themes = createBandDto.Themes,
             Label = createBandDto.Label,
             YearsActive = createBandDto.YearsActive,
             LogoUrl = createBandDto.LogoUrl,
-            PhotoUrl = createBandDto.PhotoUrl,
+            ImageUrl = createBandDto.PhotoUrl,
             Biography = createBandDto.Biography,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -91,7 +91,7 @@ public class BandService : IBandService
         if (updateBandDto.FormedYear.HasValue)
             existingBand.FormedYear = updateBandDto.FormedYear.Value;
         if (!string.IsNullOrEmpty(updateBandDto.Genre))
-            existingBand.Genre = updateBandDto.Genre;
+            existingBand.Genres = updateBandDto.Genre;
         if (!string.IsNullOrEmpty(updateBandDto.Themes))
             existingBand.Themes = updateBandDto.Themes;
         if (!string.IsNullOrEmpty(updateBandDto.Label))
@@ -101,7 +101,7 @@ public class BandService : IBandService
         if (!string.IsNullOrEmpty(updateBandDto.LogoUrl))
             existingBand.LogoUrl = updateBandDto.LogoUrl;
         if (!string.IsNullOrEmpty(updateBandDto.PhotoUrl))
-            existingBand.PhotoUrl = updateBandDto.PhotoUrl;
+            existingBand.ImageUrl = updateBandDto.PhotoUrl;
         if (!string.IsNullOrEmpty(updateBandDto.Biography))
             existingBand.Biography = updateBandDto.Biography;
         
@@ -116,7 +116,7 @@ public class BandService : IBandService
         return await _bandRepository.DeleteAsync(id);
     }
 
-    private static BandDto MapToBandDto(Band band) => new()
+    private static BandDto MapToBandDto(Artist band) => new()
     {
         Id = band.Id,
         Name = band.Name,
@@ -124,28 +124,28 @@ public class BandService : IBandService
         Location = band.Location,
         Status = band.Status,
         FormedYear = band.FormedYear,
-        Genre = band.Genre,
+        Genre = band.Genres,
         Themes = band.Themes,
         Label = band.Label,
         YearsActive = band.YearsActive,
         LogoUrl = band.LogoUrl,
-        PhotoUrl = band.PhotoUrl,
+        PhotoUrl = band.ImageUrl,
         Biography = band.Biography,
         CreatedAt = band.CreatedAt,
         UpdatedAt = band.UpdatedAt,
         Albums = band.Albums?.Select(MapToAlbumSummaryDto).ToList() ?? new List<AlbumSummaryDto>()
     };
 
-    private static BandSummaryDto MapToBandSummaryDto(Band band) => new()
+    private static BandSummaryDto MapToBandSummaryDto(Artist band) => new()
     {
         Id = band.Id,
         Name = band.Name,
         Country = band.Country,
-        Genre = band.Genre,
+        Genre = band.Genres,
         FormedYear = band.FormedYear,
         Status = band.Status,
         LogoUrl = band.LogoUrl,
-        PhotoUrl = band.PhotoUrl,
+        PhotoUrl = band.ImageUrl,
         AlbumCount = band.Albums?.Count ?? 0
     };
 
@@ -156,7 +156,7 @@ public class BandService : IBandService
         AlbumType = album.AlbumType,
         ReleaseYear = album.ReleaseYear,
         CoverImageUrl = album.CoverImageUrl,
-        BandName = album.Band?.Name ?? string.Empty,
+        BandName = album.Artist?.Name ?? string.Empty,
         TotalDuration = album.TotalDuration,
         SongCount = album.Songs?.Count ?? 0
     };

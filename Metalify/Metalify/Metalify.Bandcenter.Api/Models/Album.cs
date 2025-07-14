@@ -71,7 +71,7 @@ public class Album
     /// ID of the band that created this album
     /// </summary>
     [Required]
-    public Guid BandId { get; set; }
+    public Guid ArtistId { get; set; }
 
     /// <summary>
     /// When the album record was created
@@ -87,8 +87,8 @@ public class Album
     /// <summary>
     /// The band that created this album
     /// </summary>
-    [ForeignKey(nameof(BandId))]
-    public virtual Band Band { get; set; } = null!;
+    [ForeignKey(nameof(ArtistId))]
+    public virtual Artist Artist { get; set; } = null!;
 
     /// <summary>
     /// Songs on this album

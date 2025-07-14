@@ -82,7 +82,7 @@ public class AlbumService : IAlbumService
             CatalogNumber = createAlbumDto.CatalogNumber,
             Format = createAlbumDto.Format,
             Notes = createAlbumDto.Notes,
-            BandId = createAlbumDto.BandId,
+            ArtistId = createAlbumDto.BandId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -137,8 +137,8 @@ public class AlbumService : IAlbumService
         Format = album.Format,
         TotalDuration = album.TotalDuration,
         Notes = album.Notes,
-        BandId = album.BandId,
-        BandName = album.Band?.Name ?? string.Empty,
+        BandId = album.ArtistId,
+        BandName = album.Artist?.Name ?? string.Empty,
         Songs = album.Songs?.Select(MapToSongDto).ToList() ?? new List<SongDto>()
     };
 
@@ -149,7 +149,7 @@ public class AlbumService : IAlbumService
         AlbumType = album.AlbumType,
         ReleaseYear = album.ReleaseYear,
         CoverImageUrl = album.CoverImageUrl,
-        BandName = album.Band?.Name ?? string.Empty,
+        BandName = album.Artist?.Name ?? string.Empty,
         TotalDuration = album.TotalDuration,
         SongCount = album.Songs?.Count ?? 0
     };
@@ -164,7 +164,7 @@ public class AlbumService : IAlbumService
         Notes = song.Notes,
         AlbumId = song.AlbumId,
         AlbumTitle = song.Album?.Title ?? string.Empty,
-        BandId = song.BandId,
-        BandName = song.Album?.Band?.Name ?? string.Empty
+        BandId = song.ArtistId,
+        BandName = song.Album?.Artist?.Name ?? string.Empty
     };
 }
