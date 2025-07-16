@@ -1,14 +1,18 @@
 using Metalify.Client.Models;
 using Metalify.Services.Interfaces;
 using System.Text.Json;
+using Dapr.Client;
 
 namespace Metalify.Services;
 
 /// <summary>
 /// HTTP-based playlist service that calls the Metalify.Playlist.Api
 /// </summary>
-public class PlaylistService(HttpClient httpClient, ICatalogService catalogService, ILogger<PlaylistService> logger) : IPlaylistService
+public class PlaylistService(ICatalogService catalogService, ILogger<PlaylistService> logger) : IPlaylistService
 {
+    private readonly HttpClient _httpClient = DaprClient.CreateInvokeHttpClient("metalify-playlist-api");
+
+
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -21,7 +25,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
         {
             logger.LogInformation("Fetching user playlists from API");
             
-            var playlistDtos = await httpClient.GetFromJsonAsync<List<PlaylistSummaryDto>>(
+            var playlistDtos = await _httpClient.GetFromJsonAsync<List<PlaylistSummaryDto>>(
                 "api/playlists", _jsonOptions);
 
             if (playlistDtos == null)
@@ -67,7 +71,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
                 CoverImageUrl = "https://www.metal-archives.com/images/5/2/7/6/5276_logo.jpg"
             };
 
-            var response = await httpClient.PostAsJsonAsync("api/playlists", createDto, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/playlists", createDto, _jsonOptions);
             response.EnsureSuccessStatusCode();
 
             var playlistDto = await response.Content.ReadFromJsonAsync<PlaylistDto>(_jsonOptions);
@@ -116,7 +120,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
                 Position = null // Add to end
             };
 
-            var response = await httpClient.PostAsJsonAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"api/playlists/{playlistId}/songs", addSongDto, _jsonOptions);
 
             if (response.IsSuccessStatusCode)
@@ -151,7 +155,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
         {
             logger.LogInformation("Removing song {SongId} from playlist {PlaylistId}", songId, playlistId);
 
-            var response = await httpClient.DeleteAsync($"api/playlists/{playlistId}/songs/{songId}");
+            var response = await _httpClient.DeleteAsync($"api/playlists/{playlistId}/songs/{songId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -185,7 +189,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
         {
             logger.LogInformation("Deleting playlist {PlaylistId}", playlistId);
 
-            var response = await httpClient.DeleteAsync($"api/playlists/{playlistId}");
+            var response = await _httpClient.DeleteAsync($"api/playlists/{playlistId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -225,7 +229,7 @@ public class PlaylistService(HttpClient httpClient, ICatalogService catalogServi
                 IsPublic = playlist.IsPublic
             };
 
-            var response = await httpClient.PutAsJsonAsync($"api/playlists/{playlist.Id}", updateDto, _jsonOptions);
+            var response = await _httpClient.PutAsJsonAsync($"api/playlists/{playlist.Id}", updateDto, _jsonOptions);
 
             if (response.IsSuccessStatusCode)
             {

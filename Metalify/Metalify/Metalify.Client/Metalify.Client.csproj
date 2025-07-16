@@ -14,5 +14,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.BrowserConsole" Version="1.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Artists.razor" />
+  </ItemGroup>
 
 </Project>

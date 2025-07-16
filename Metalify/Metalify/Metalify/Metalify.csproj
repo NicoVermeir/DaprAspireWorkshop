@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Metalify.Client\Metalify.Client.csproj" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.15.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />

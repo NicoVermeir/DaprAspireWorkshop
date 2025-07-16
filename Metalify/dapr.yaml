@@ -1,0 +1,34 @@
+apps:
+- appDirPath: Metalify\Metalify.Playlist.Api
+  appID: metalify-playlist-api
+  appPort: 5228
+  command:
+  - dotnet
+  - run
+- appDirPath: Metalify\Metalify.Bandcenter.Api
+  appID: metalify-bandcenter-api
+  appPort: 5066
+  command:
+  - dotnet
+  - run
+- appDirPath: Metalify\Metalify.BandCenter
+  appID: metalify-bandcenter
+  appPort: 5183
+  command:
+  - dotnet
+  - run
+- appDirPath: Metalify\Metalify
+  appID: metalify
+  appPort: 5089
+  command:
+  - dotnet
+  - run
+  resourcesPaths:
+  - ./components
+- appDirPath: Metalify\Metalify.Catalog.Api
+  appID: metalify-catalog-api
+  appPort: 5101
+  command:
+  - dotnet
+  - run
+version: 1

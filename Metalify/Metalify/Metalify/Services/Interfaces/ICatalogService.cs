@@ -11,5 +11,4 @@ public interface ICatalogService
     Task<Artist?> GetArtistByIdAsync(Guid id);
     Task<Album?> GetAlbumByIdAsync(Guid id);
     Task<Song?> GetSongByIdAsync(Guid id);
-    Task<Playlist?> GetPlaylistByIdAsync(Guid id);
 }

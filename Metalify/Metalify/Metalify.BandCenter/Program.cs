@@ -14,6 +14,7 @@ builder.Services.AddHttpClient<IBandCenterService, BandCenterService>(client =>
 });
 
 // Add session service as singleton to maintain state across the app
+builder.Services.AddScoped<IBandCenterService, BandCenterService>();
 builder.Services.AddSingleton<IBandSessionService, BandSessionService>();
 
 var app = builder.Build();

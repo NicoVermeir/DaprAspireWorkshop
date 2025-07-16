@@ -1,14 +1,17 @@
 using Metalify.Client.Models;
 using Metalify.Services.Interfaces;
 using System.Text.Json;
+using Dapr.Client;
 
 namespace Metalify.Services;
 
 /// <summary>
 /// HTTP-based music data service that calls the Metalify.Api with resilience patterns
 /// </summary>
-public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logger) : ICatalogService
+public class CatalogService(ILogger<CatalogService> logger) : ICatalogService
 {
+    private readonly HttpClient _httpClient = DaprClient.CreateInvokeHttpClient("metalify-catalog-api");
+
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -21,7 +24,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching all artists from API");
             
-            var artistDtos = await httpClient.GetFromJsonAsync<List<ArtistSummaryDto>>(
+            var artistDtos = await _httpClient.GetFromJsonAsync<List<ArtistSummaryDto>>(
                 "api/artists", _jsonOptions);
 
             if (artistDtos == null)
@@ -58,7 +61,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching all albums from API");
             
-            var albumDtos = await httpClient.GetFromJsonAsync<List<AlbumSummaryDto>>(
+            var albumDtos = await _httpClient.GetFromJsonAsync<List<AlbumSummaryDto>>(
                 "api/albums", _jsonOptions);
 
             if (albumDtos == null)
@@ -95,7 +98,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching all songs from API");
             
-            var songDtos = await httpClient.GetFromJsonAsync<List<SongDto>>(
+            var songDtos = await _httpClient.GetFromJsonAsync<List<SongDto>>(
                 "api/songs", _jsonOptions);
 
             if (songDtos == null)
@@ -140,7 +143,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching artist {ArtistId} from API", id);
             
-            var artistDto = await httpClient.GetFromJsonAsync<ArtistDto>(
+            var artistDto = await _httpClient.GetFromJsonAsync<ArtistDto>(
                 $"api/artists/{id}", _jsonOptions);
 
             if (artistDto == null)
@@ -182,7 +185,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching album {AlbumId} from API", id);
             
-            var albumDto = await httpClient.GetFromJsonAsync<AlbumDto>(
+            var albumDto = await _httpClient.GetFromJsonAsync<AlbumDto>(
                 $"api/albums/{id}", _jsonOptions);
 
             if (albumDto == null)
@@ -224,7 +227,7 @@ public class CatalogService(HttpClient httpClient, ILogger<CatalogService> logge
         {
             logger.LogInformation("Fetching song {SongId} from API", id);
             
-            var songDto = await httpClient.GetFromJsonAsync<SongDto>(
+            var songDto = await _httpClient.GetFromJsonAsync<SongDto>(
                 $"api/songs/{id}", _jsonOptions);
 
             if (songDto == null)
