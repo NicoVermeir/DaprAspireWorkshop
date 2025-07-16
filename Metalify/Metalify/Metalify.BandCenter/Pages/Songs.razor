@@ -331,7 +331,8 @@ else
             
             if (selectedAlbumId.HasValue)
             {
-                songs = await BandCenterService.GetAlbumSongsAsync(selectedAlbumId.Value);
+                var album = await BandCenterService.GetAlbumSongsAsync(selectedAlbumId.Value);
+                songs = album.Songs;
             }
             else
             {
@@ -347,8 +348,8 @@ else
                     {
                         try
                         {
-                            var albumSongs = await BandCenterService.GetAlbumSongsAsync(album.Id);
-                            allSongs.AddRange(albumSongs);
+                            var albumDetails = await BandCenterService.GetAlbumSongsAsync(album.Id);
+                            allSongs.AddRange(albumDetails.Songs);
                         }
                         catch
                         {

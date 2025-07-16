@@ -20,7 +20,7 @@ public interface IBandCenterService
     Task<bool> DeleteAlbumAsync(Guid albumId);
 
     // Song operations
-    Task<List<SongDto>> GetAlbumSongsAsync(Guid albumId);
+    Task<AlbumDto> GetAlbumSongsAsync(Guid albumId);
     Task<SongDto?> GetSongByIdAsync(Guid songId);
     Task<SongDto> CreateSongAsync(CreateSongDto createSong);
     Task<SongDto?> UpdateSongAsync(Guid songId, UpdateSongDto updateSong);

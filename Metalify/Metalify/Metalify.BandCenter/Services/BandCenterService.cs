@@ -117,8 +117,8 @@ public class BandCenterService : IBandCenterService
             _logger.LogInformation("Fetching albums for band {BandId}", bandId);
             
             var response = await _httpClient.GetFromJsonAsync<List<AlbumSummaryDto>>(
-                $"api/bands/{bandId}/albums", _jsonOptions);
-                
+                $"api/albums/band/{bandId}", _jsonOptions);
+                 
             return response ?? new List<AlbumSummaryDto>();
         }
         catch (Exception ex)
@@ -199,21 +199,21 @@ public class BandCenterService : IBandCenterService
     }
 
     // Song operations
-    public async Task<List<SongDto>> GetAlbumSongsAsync(Guid albumId)
+    public async Task<AlbumDto> GetAlbumSongsAsync(Guid albumId)
     {
         try
         {
             _logger.LogInformation("Fetching songs for album {AlbumId}", albumId);
             
-            var response = await _httpClient.GetFromJsonAsync<List<SongDto>>(
+            var response = await _httpClient.GetFromJsonAsync<AlbumDto>(
                 $"api/albums/{albumId}/songs", _jsonOptions);
                 
-            return response ?? new List<SongDto>();
+            return response ?? new AlbumDto();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching songs for album {AlbumId}", albumId);
-            return new List<SongDto>();
+            return new AlbumDto();
         }
     }
 
