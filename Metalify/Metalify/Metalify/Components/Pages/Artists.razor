@@ -188,7 +188,7 @@
     {
         if (!ArtistId.HasValue) return;
 
-        currentArtist = allArtists.FirstOrDefault(a => a.Id == ArtistId.Value);
+        currentArtist = await MusicDataService.GetArtistByIdAsync(ArtistId.Value);
         
         if (currentArtist != null)
         {

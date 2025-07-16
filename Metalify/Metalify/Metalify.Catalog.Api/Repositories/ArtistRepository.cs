@@ -87,4 +87,10 @@ public class ArtistRepository : IArtistRepository
             throw;
         }
     }
+
+    public async Task UpdateAsync(Artist updatedArtist)
+    {
+        _context.Entry(updatedArtist).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+    }
 }

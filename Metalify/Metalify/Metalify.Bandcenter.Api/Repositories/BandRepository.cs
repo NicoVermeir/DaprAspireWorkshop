@@ -18,7 +18,8 @@ public class BandRepository : IBandRepository
         return await _context.Bands
             .OrderBy(b => b.Name)
             .ToListAsync();
-    }    public async Task<Artist?> GetByIdAsync(Guid id)
+    }
+    public async Task<Artist?> GetByIdAsync(Guid id)
     {
         return await _context.Bands
             .FirstOrDefaultAsync(b => b.Id == id);
@@ -74,7 +75,9 @@ public class BandRepository : IBandRepository
         _context.Entry(band).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return band;
-    }    public async Task<bool> DeleteAsync(Guid id)
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
     {
         var band = await _context.Bands.FindAsync(id);
         if (band == null)

@@ -11,6 +11,7 @@ public interface IArtistRepository
     Task<Artist?> GetByIdAsync(Guid id);
     Task<IEnumerable<Artist>> GetByCountryAsync(string country);
     Task<IEnumerable<Artist>> SearchByNameAsync(string searchTerm);
+    Task UpdateAsync(Artist updatedArtist);
 }
 
 /// <summary>

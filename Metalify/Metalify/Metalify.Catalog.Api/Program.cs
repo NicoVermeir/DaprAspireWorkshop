@@ -5,6 +5,7 @@ using Metalify.Catalog.Api.Repositories;
 using Metalify.Catalog.Api.Services;
 using Metalify.Catalog.Api.DTOs;
 using Metalify.Catalog.Api.Extensions;
+using Microsoft.AspNetCore.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,11 +102,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorClient");
+app.UseCloudEvents();
 
 // Map API Endpoints
+app.MapSubscriptionEndpoints();
 app.MapArtistEndpoints();
 app.MapAlbumEndpoints();
 app.MapSongEndpoints();
 app.MapHealthEndpoints();
+app.MapSubscribeHandler();
 
 app.Run();

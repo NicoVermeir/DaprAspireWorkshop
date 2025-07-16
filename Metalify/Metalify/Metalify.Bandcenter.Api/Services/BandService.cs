@@ -1,51 +1,49 @@
 using Metalify.Bandcenter.Api.DTOs;
 using Metalify.Bandcenter.Api.Models;
 using Metalify.Bandcenter.Api.Repositories;
+using System.Threading;
+using Dapr.Client;
 
 namespace Metalify.Bandcenter.Api.Services;
 
-public class BandService : IBandService
+public class BandService(IBandRepository bandRepository, DaprClient daprClient) : IBandService
 {
-    private readonly IBandRepository _bandRepository;
-
-    public BandService(IBandRepository bandRepository)
-    {
-        _bandRepository = bandRepository;
-    }
+    const string PUBSUB_NAME = "pubsub";
+    const string TOPIC_NAME = "artist-changed";
 
     public async Task<IEnumerable<BandSummaryDto>> GetAllBandsAsync()
     {
-        var bands = await _bandRepository.GetAllAsync();
+        var bands = await bandRepository.GetAllAsync();
         return bands.Select(MapToBandSummaryDto);
     }
 
     public async Task<BandDto?> GetBandByIdAsync(Guid id)
     {
-        var band = await _bandRepository.GetByIdAsync(id);
+        var band = await bandRepository.GetByIdAsync(id);
         return band == null ? null : MapToBandDto(band);
     }
 
     public async Task<BandDto?> GetBandWithAlbumsAsync(Guid id)
     {
-        var band = await _bandRepository.GetByIdWithAlbumsAsync(id);
+        var band = await bandRepository.GetByIdWithAlbumsAsync(id);
         return band == null ? null : MapToBandDto(band);
     }
 
     public async Task<IEnumerable<BandSummaryDto>> SearchBandsByNameAsync(string searchTerm)
     {
-        var bands = await _bandRepository.SearchByNameAsync(searchTerm);
+        var bands = await bandRepository.SearchByNameAsync(searchTerm);
         return bands.Select(MapToBandSummaryDto);
     }
 
     public async Task<IEnumerable<BandSummaryDto>> GetBandsByGenreAsync(string genre)
     {
-        var bands = await _bandRepository.GetByGenreAsync(genre);
+        var bands = await bandRepository.GetByGenreAsync(genre);
         return bands.Select(MapToBandSummaryDto);
     }
 
     public async Task<IEnumerable<BandSummaryDto>> GetBandsByCountryAsync(string country)
     {
-        var bands = await _bandRepository.GetByCountryAsync(country);
+        var bands = await bandRepository.GetByCountryAsync(country);
         return bands.Select(MapToBandSummaryDto);
     }
 
@@ -70,13 +68,13 @@ public class BandService : IBandService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var createdBand = await _bandRepository.AddAsync(band);
+        var createdBand = await bandRepository.AddAsync(band);
         return MapToBandDto(createdBand);
     }
 
     public async Task<BandDto?> UpdateBandAsync(Guid id, UpdateBandDto updateBandDto)
     {
-        var existingBand = await _bandRepository.GetByIdAsync(id);
+        var existingBand = await bandRepository.GetByIdAsync(id);
         if (existingBand == null)
             return null;
 
@@ -107,13 +105,22 @@ public class BandService : IBandService
         
         existingBand.UpdatedAt = DateTime.UtcNow;
 
-        var updatedBand = await _bandRepository.UpdateAsync(existingBand);
-        return MapToBandDto(updatedBand);
+        var updatedBand = await bandRepository.UpdateAsync(existingBand);
+
+        var mappedDto = MapToBandDto(updatedBand);
+        await PublishMessage(mappedDto);
+
+        return mappedDto;
+    }
+
+    private async Task PublishMessage(BandDto artist)
+    {
+        await daprClient.PublishEventAsync(PUBSUB_NAME, TOPIC_NAME, artist);
     }
 
     public async Task<bool> DeleteBandAsync(Guid id)
     {
-        return await _bandRepository.DeleteAsync(id);
+        return await bandRepository.DeleteAsync(id);
     }
 
     private static BandDto MapToBandDto(Artist band) => new()

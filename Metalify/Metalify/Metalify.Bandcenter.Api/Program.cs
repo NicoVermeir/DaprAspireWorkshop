@@ -35,6 +35,8 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     }
 });
 
+builder.Services.AddDaprClient();
+
 // Register repositories
 builder.Services.AddScoped<IBandRepository, BandRepository>();
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
@@ -79,10 +81,13 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
+app.UseCloudEvents();
+
 // Map API endpoints
 app.MapBandEndpoints();
 app.MapAlbumEndpoints();
 app.MapSongEndpoints();
+app.MapSubscribeHandler();
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))

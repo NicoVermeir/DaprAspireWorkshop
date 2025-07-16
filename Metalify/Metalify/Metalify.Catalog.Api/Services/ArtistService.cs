@@ -46,6 +46,48 @@ public class ArtistService : IArtistService
         return artists.Select(MapToSummaryDto);
     }
 
+    public async Task UpdateArtistAsync(ArtistDto artist)
+    {
+        var existingBand = await _artistRepository.GetByIdAsync(artist.Id);
+
+        if (existingBand == null)
+            return;
+
+        if (!string.IsNullOrEmpty(artist.Name))
+            existingBand.Name = artist.Name;
+
+        if (!string.IsNullOrEmpty(artist.Country))
+            existingBand.Country = artist.Country;
+
+        if (!string.IsNullOrEmpty(artist.Location))
+            existingBand.Location = artist.Location;
+
+        if (!string.IsNullOrEmpty(artist.Status))
+            existingBand.Status = artist.Status;
+
+        if (!string.IsNullOrEmpty(artist.Genre))
+            existingBand.Genres = artist.Genre;
+
+        if (!string.IsNullOrEmpty(artist.Themes))
+            existingBand.Themes = artist.Themes;
+
+        if (!string.IsNullOrEmpty(artist.Label))
+            existingBand.Label = artist.Label;
+
+        if (!string.IsNullOrEmpty(artist.YearsActive))
+            existingBand.YearsActive = artist.YearsActive;
+
+        if (!string.IsNullOrEmpty(artist.LogoUrl))
+            existingBand.LogoUrl = artist.LogoUrl;
+
+        if (!string.IsNullOrEmpty(artist.Biography))
+            existingBand.Biography = artist.Biography;
+
+        existingBand.UpdatedAt = DateTime.UtcNow;
+
+        await _artistRepository.UpdateAsync(existingBand);
+    }
+
     private static ArtistDto MapToDto(Artist artist)
     {
         return new ArtistDto

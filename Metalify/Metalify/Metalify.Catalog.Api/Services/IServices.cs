@@ -11,6 +11,7 @@ public interface IArtistService
     Task<ArtistDto?> GetArtistByIdAsync(Guid id);
     Task<IEnumerable<ArtistSummaryDto>> GetArtistsByCountryAsync(string country);
     Task<IEnumerable<ArtistSummaryDto>> SearchArtistsAsync(string searchTerm);
+    Task UpdateArtistAsync(ArtistDto artist);
 }
 
 /// <summary>
