@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Metalify.ServiceDefaults\Metalify.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

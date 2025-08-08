@@ -7,6 +7,8 @@ using Metalify.Playlist.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 
@@ -72,6 +74,8 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<PlaylistDbContext>();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

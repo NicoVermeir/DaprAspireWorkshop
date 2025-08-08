@@ -6,6 +6,8 @@ using Metalify.Bandcenter.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -19,21 +21,22 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Add Entity Framework
-builder.Services.AddDbContext<CatalogDbContext>(options =>
-{
-    if (builder.Environment.IsDevelopment())
-    {
-        // Use in-memory database for development
-        options.UseInMemoryDatabase("CatalogDb");
-    }
-    else
-    {
-        // Use SQL Server for production
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-        options.UseSqlServer(connectionString);
-    }
-});
+builder.AddSqlServerDbContext<CatalogDbContext>("CatalogDb");
+//builder.Services.AddDbContext<CatalogDbContext>(options =>
+//{
+//    if (builder.Environment.IsDevelopment())
+//    {
+//        // Use in-memory database for development
+//        options.UseInMemoryDatabase("CatalogDb");
+//    }
+//    else
+//    {
+//        // Use SQL Server for production
+//        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+//            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+//        options.UseSqlServer(connectionString);
+//    }
+//});
 
 // Register repositories
 builder.Services.AddScoped<IBandRepository, BandRepository>();
@@ -57,6 +60,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

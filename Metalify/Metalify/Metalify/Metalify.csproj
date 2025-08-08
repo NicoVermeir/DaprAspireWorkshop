@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Metalify.ServiceDefaults\Metalify.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Metalify.Client\Metalify.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />

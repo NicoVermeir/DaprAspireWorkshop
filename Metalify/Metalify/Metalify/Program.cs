@@ -54,6 +54,8 @@ try
     // Register Music Services (for server-side rendering)
     builder.Services.AddScoped<ISearchService, SearchService>();
     builder.Services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
+    builder.AddServiceDefaults();
+
 
     var app = builder.Build();
 
@@ -91,3 +93,4 @@ finally
 {
     Log.CloseAndFlush();
 }
+
